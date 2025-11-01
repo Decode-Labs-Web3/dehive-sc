@@ -13,8 +13,27 @@ pragma solidity ^0.8.0;
  * @custom:usage The messaging system supports two payment models:
  *      - Pay-as-you-go: Users send messages directly with ETH payment (higher fee)
  *      - Credit-based: Users deposit ETH, then relayer sends messages on their behalf (lower fee)
+ *
+ * @custom:dualmode This interface supports both standalone and facet modes:
+ *      - Standalone: Deployed as a regular contract, uses constructor for initialization
+ *      - Facet: Installed in DehiveProxy, uses init() function for initialization
  */
 interface IMessage {
+    //============== INITIALIZATION ==============
+
+    /**
+     * @notice Initialize the Message facet (for facet mode)
+     * @param owner The address that will own the facet (should be proxy owner)
+     * @dev This function is called when the facet is installed in the DehiveProxy.
+     *      It initializes the Diamond Storage with default values.
+     *      Can only be called once per deployment.
+     *
+     * @dev In standalone mode, the constructor initializes the contract.
+     *      In facet mode, init() is called via delegatecall through the proxy.
+     *
+     * @custom:reverts "Message: already initialized" if called more than once
+     */
+    function init(address owner) external;
     //============== EVENTS ==============
 
     /**
@@ -207,6 +226,56 @@ interface IMessage {
     function getMyEncryptedConversationKeys(
         uint256 conversationId
     ) external view returns (bytes memory encryptedConversationKeyForMe);
+
+    //============== VIEW FUNCTIONS ==============
+
+    /**
+     * @notice Get the pay-as-you-go fee
+     * @return The current pay-as-you-go fee
+     */
+    function payAsYouGoFee() external view returns (uint256);
+
+    /**
+     * @notice Get the relayer fee
+     * @return The current relayer fee
+     */
+    function relayerFee() external view returns (uint256);
+
+    /**
+     * @notice Get the relayer address
+     * @return The current relayer address
+     */
+    function relayer() external view returns (address);
+
+    /**
+     * @notice Get conversation data
+     * @param conversationId The conversation ID
+     * @return smallerAddress The smaller address in the conversation pair
+     * @return largerAddress The larger address in the conversation pair
+     * @return encryptedConversationKeyForSmallerAddress The encrypted key for smaller address
+     * @return encryptedConversationKeyForLargerAddress The encrypted key for larger address
+     * @return createdAt The timestamp when the conversation was created
+     */
+    function conversations(uint256 conversationId) external view returns (
+        address smallerAddress,
+        address largerAddress,
+        bytes memory encryptedConversationKeyForSmallerAddress,
+        bytes memory encryptedConversationKeyForLargerAddress,
+        uint256 createdAt
+    );
+
+    /**
+     * @notice Get user's deposited funds balance
+     * @param user The user address
+     * @return The user's deposited funds balance
+     */
+    function funds(address user) external view returns (uint256);
+
+    /**
+     * @notice Get the owner address
+     * @return The owner address (proxy owner in facet mode, stored owner in standalone mode)
+     */
+    function owner() external view returns (address);
 
     //============== FUNDS FUNCTIONS ==============
 

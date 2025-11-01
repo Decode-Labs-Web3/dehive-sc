@@ -1,4 +1,9 @@
-import { ethers } from "hardhat";
+import { ethers, Signer } from "hardhat";
+import { Message } from "../../typechain-types";
+import {
+  generateConversationKey,
+  encryptConversationKeyForAddress,
+} from "./mockEncryption";
 
 /**
  * Conversation Helper Utilities
@@ -116,4 +121,47 @@ export function createConversationData(
       ? encryptedKeyFor2
       : encryptedKeyFor1,
   };
+}
+
+/**
+ * Simulates creating a conversation on-chain
+ * @param messageContract The Message contract instance
+ * @param sender The signer who will create the conversation
+ * @param recipientAddress The address of the recipient
+ * @param seed Optional seed for generating the conversation key
+ * @returns Object with conversationId and conversationKey
+ */
+export async function simulateCreateConversation(
+  messageContract: Message,
+  sender: Signer,
+  recipientAddress: string,
+  seed: string = "default-seed"
+): Promise<{ conversationId: bigint; conversationKey: string }> {
+  const conversationKey = generateConversationKey(seed);
+  const encryptedKeyForSender = encryptConversationKeyForAddress(
+    conversationKey,
+    await sender.getAddress()
+  );
+  const encryptedKeyForRecipient = encryptConversationKeyForAddress(
+    conversationKey,
+    recipientAddress
+  );
+
+  const conversationId = await messageContract
+    .connect(sender)
+    .createConversation.staticCall(
+      recipientAddress,
+      `0x${encryptedKeyForSender}`,
+      `0x${encryptedKeyForRecipient}`
+    );
+
+  await messageContract
+    .connect(sender)
+    .createConversation(
+      recipientAddress,
+      `0x${encryptedKeyForSender}`,
+      `0x${encryptedKeyForRecipient}`
+    );
+
+  return { conversationId, conversationKey };
 }

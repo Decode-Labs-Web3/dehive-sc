@@ -63,12 +63,18 @@ const config: HardhatUserConfig = {
     },
   },
   etherscan: {
-    apiKey: {
-      mainnet: process.env.ETHERSCAN_API_KEY || "",
-      sepolia: process.env.ETHERSCAN_API_KEY || "",
-      polygon: process.env.POLYGONSCAN_API_KEY || "",
-      bsc: process.env.BSCSCAN_API_KEY || "",
-    },
+    // Etherscan V2 API - single API key for Ethereum networks
+    // Your Etherscan API key works for both mainnet and Sepolia
+    apiKey: process.env.ETHERSCAN_API_KEY || "",
+
+    // Optional: Custom API keys for other networks
+    // If you need to verify on other networks, you can use the object format:
+    // apiKey: {
+    //   mainnet: process.env.ETHERSCAN_API_KEY || "",
+    //   sepolia: process.env.ETHERSCAN_API_KEY || "",
+    //   polygon: process.env.POLYGONSCAN_API_KEY || "",
+    //   bsc: process.env.BSCSCAN_API_KEY || "",
+    // },
   },
   sourcify: {
     enabled: true,

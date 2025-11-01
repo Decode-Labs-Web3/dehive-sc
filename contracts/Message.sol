@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "./interfaces/IMessage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/DehiveProxy.sol";
+import "./libraries/MessageStorage.sol";
 
 /**
  * @title Message
@@ -17,8 +18,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *      - Relayer fee (relayerFee): Lower fee for messages sent via relayer using deposited credits
  *
  * @custom:security Access control is managed through:
- *      - Ownable: Contract owner can update fees and relayer address
+ *      - Proxy owner (in facet mode) or stored owner (in standalone mode): Can update fees and relayer address
  *      - onlyRelayer modifier: Only authorized relayer can send messages via relayer
+ *
+ * @custom:dualmode This contract supports dual-mode operation:
+ *      - Standalone mode: Deployed as a regular contract, uses stored owner
+ *      - Facet mode: Installed in DehiveProxy, uses proxy owner via IDehiveProxy interface
  *
  * @custom:conversation-id Conversation IDs are deterministic and computed as:
  *      conversationId = uint256(keccak256(abi.encodePacked(smallerAddress, largerAddress)))
@@ -26,50 +31,142 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  * @author DeHive
  */
-contract Message is IMessage, Ownable {
+contract Message is IMessage {
+    using MessageStorage for MessageStorage.MessageStorageStruct;
+
     /**
-     * @notice Initialize the Message contract with an owner
+     * @notice Initialize the Message contract (standalone mode)
      * @param owner The address that will own the contract and can configure fees/relayer
-     * @dev The owner is set using OpenZeppelin's Ownable pattern
+     * @dev Sets up the contract in standalone mode with an owner
      */
-    constructor(address owner) Ownable(owner) {
+    constructor(address owner) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+        require(!ds.initialized, "Message: already initialized");
+        ds.owner = owner;
+        ds.payAsYouGoFee = 0.0000002 ether;
+        ds.relayerFee = 0.0000001 ether;
+        ds.initialized = true;
     }
 
-    //============== STRUCTS ==============
+    //============== STORAGE ACCESSORS ==============
+    // Public getters for state variables to maintain interface compatibility
 
     /**
-     * @notice Conversation data structure storing encrypted keys for both participants
-     * @dev Addresses are ordered deterministically (smaller < larger) to ensure consistent conversation IDs
+     * @notice Get the pay-as-you-go fee
+     * @return The current pay-as-you-go fee
      */
-    struct Conversation {
-        address smallerAddress;  /// @dev The smaller address in the pair (deterministic ordering)
-        address largerAddress;   /// @dev The larger address in the pair (deterministic ordering)
-        bytes encryptedConversationKeyForSmallerAddress;  /// @dev Encrypted conversation key for smaller address
-        bytes encryptedConversationKeyForLargerAddress;   /// @dev Encrypted conversation key for larger address
-        uint256 createdAt;      /// @dev Timestamp when the conversation was created
+    function payAsYouGoFee() external view returns (uint256) {
+        return MessageStorage.messageStorage().payAsYouGoFee;
     }
 
-    //============== STATE VARIABLES ==============
+    /**
+     * @notice Get the relayer fee
+     * @return The current relayer fee
+     */
+    function relayerFee() external view returns (uint256) {
+        return MessageStorage.messageStorage().relayerFee;
+    }
 
-    /// @notice Fee charged for direct message sending (pay-as-you-go model)
-    /// @dev This fee is higher than relayerFee to incentivize credit deposits
-    uint256 public payAsYouGoFee = 0.0000002 ether;
+    /**
+     * @notice Get the relayer address
+     * @return The current relayer address
+     */
+    function relayer() external view returns (address) {
+        return MessageStorage.messageStorage().relayer;
+    }
 
-    /// @notice Fee charged for relayer-based message sending (credit model)
-    /// @dev This fee is lower than payAsYouGoFee to incentivize credit deposits
-    uint256 public relayerFee = 0.0000001 ether;
+    /**
+     * @notice Get conversation data
+     * @param conversationId The conversation ID
+     * @return smallerAddress The smaller address in the conversation pair
+     * @return largerAddress The larger address in the conversation pair
+     * @return encryptedConversationKeyForSmallerAddress The encrypted key for smaller address
+     * @return encryptedConversationKeyForLargerAddress The encrypted key for larger address
+     * @return createdAt The timestamp when the conversation was created
+     */
+    function conversations(uint256 conversationId) external view returns (
+        address smallerAddress,
+        address largerAddress,
+        bytes memory encryptedConversationKeyForSmallerAddress,
+        bytes memory encryptedConversationKeyForLargerAddress,
+        uint256 createdAt
+    ) {
+        MessageStorage.Conversation storage conv = MessageStorage.messageStorage().conversations[conversationId];
+        return (
+            conv.smallerAddress,
+            conv.largerAddress,
+            conv.encryptedConversationKeyForSmallerAddress,
+            conv.encryptedConversationKeyForLargerAddress,
+            conv.createdAt
+        );
+    }
 
-    /// @notice Address of the authorized relayer that can send messages via sendMessageViaRelayer
-    /// @dev Only this address can call sendMessageViaRelayer. Set by contract owner.
-    address public relayer;
+    /**
+     * @notice Get user's deposited funds balance
+     * @param user The user address
+     * @return The user's deposited funds balance
+     */
+    function funds(address user) external view returns (uint256) {
+        return MessageStorage.messageStorage().funds[user];
+    }
 
-    /// @notice Mapping from conversation ID to Conversation struct
-    /// @dev Conversation IDs are deterministic: uint256(keccak256(abi.encodePacked(addr1, addr2)))
-    mapping(uint256 => Conversation) public conversations;
+    /**
+     * @notice Get the owner address
+     * @return The owner address (proxy owner in facet mode, stored owner in standalone mode)
+     * @dev This function works in both standalone and facet modes
+     */
+    function owner() external view returns (address) {
+        return _getMessageOwner();
+    }
 
-    /// @notice Mapping from user address to their deposited credit balance
-    /// @dev Funds deposited via depositFunds() are non-refundable and used for relayer fees
-    mapping(address => uint256) public funds;
+    //============== INITIALIZATION ==============
+
+    /**
+     * @notice Initialize the Message facet (for facet mode)
+     * @param owner The address that will own the facet (proxy owner)
+     * @dev This function is called when the facet is installed in the proxy
+     *      It initializes the storage with default values
+     * @dev Can only be called once per deployment
+     */
+    function init(address owner) external override {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+        require(!ds.initialized, "Message: already initialized");
+        ds.owner = owner;
+        ds.payAsYouGoFee = 0.0000002 ether;
+        ds.relayerFee = 0.0000001 ether;
+        ds.initialized = true;
+    }
+
+    //============== HELPER FUNCTIONS ==============
+
+    /**
+     * @notice Get the owner address (supports both standalone and facet modes)
+     * @return The owner address
+     * @dev In standalone mode: returns stored owner
+     *      In facet mode: queries proxy owner via IDehiveProxy interface
+     */
+    function _getMessageOwner() internal view returns (address) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
+        // Try to detect if we're in facet mode by checking if we can call owner() on this address
+        // In facet mode, address(this) will be the proxy address
+        try IDehiveProxy(address(this)).owner() returns (address proxyOwner) {
+            // We're in facet mode - use proxy owner
+            return proxyOwner;
+        } catch {
+            // We're in standalone mode - use stored owner
+            return ds.owner;
+        }
+    }
+
+    /**
+     * @notice Modifier to restrict function access to owner only
+     * @dev Works in both standalone and facet modes
+     */
+    modifier onlyOwner() {
+        require(msg.sender == _getMessageOwner(), "Message: caller is not the owner");
+        _;
+    }
 
     //============== MESSAGE FUNCTIONS ==============
 
@@ -106,19 +203,21 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function sendMessage(uint256 conversationId, address to, string memory encryptedMessage) external payable override returns (bool success) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate fee payment
-        require(msg.value >= payAsYouGoFee, "Message: insufficient fee payment");
+        require(msg.value >= ds.payAsYouGoFee, "Message: insufficient fee payment");
 
         // Collect the fee into contract balance
-        funds[address(this)] += payAsYouGoFee;
+        ds.funds[address(this)] += ds.payAsYouGoFee;
 
         // Refund excess payment to prevent overcharging
-        if (msg.value > payAsYouGoFee) {
-            payable(msg.sender).transfer(msg.value - payAsYouGoFee);
+        if (msg.value > ds.payAsYouGoFee) {
+            payable(msg.sender).transfer(msg.value - ds.payAsYouGoFee);
         }
 
         // Emit events for off-chain indexing
-        emit FeeCharged(payAsYouGoFee, msg.sender, block.timestamp);
+        emit FeeCharged(ds.payAsYouGoFee, msg.sender, block.timestamp);
         emit MessageSent(conversationId, msg.sender, to, encryptedMessage);
         return true;
     }
@@ -140,7 +239,7 @@ contract Message is IMessage, Ownable {
      *
      * @dev Access control:
      *      - Protected by onlyRelayer modifier
-     *      - Relayer must be authorized by contract owner via setRelayer()
+     *      - Relayer must be authorized by owner via setRelayer()
      *
      * @dev Security considerations:
      *      - Fee amount is validated to prevent relayer from overcharging
@@ -164,14 +263,16 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function sendMessageViaRelayer(uint256 conversationId, address from, address to, string memory encryptedMessage, uint256 feeAmount) external override onlyRelayer returns (bool success) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate fee amount to prevent relayer from overcharging users
-        require(feeAmount == relayerFee, "Message: invalid fee amount for relayer");
+        require(feeAmount == ds.relayerFee, "Message: invalid fee amount for relayer");
 
         // Charge the fee from user's deposited funds
-        _chargeUserFunds(from, relayerFee);
+        _chargeUserFunds(from, ds.relayerFee);
 
         // Emit events for off-chain indexing
-        emit FeeCharged(relayerFee, from, block.timestamp);
+        emit FeeCharged(ds.relayerFee, from, block.timestamp);
         emit MessageSent(conversationId, from, to, encryptedMessage);
         return true;
     }
@@ -220,6 +321,8 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function createConversation(address to, bytes calldata encryptedConversationKeyForSender, bytes calldata encryptedConversationKeyForReceiver) external override returns (uint256 conversationId) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Order addresses deterministically to ensure consistent conversation IDs
         (address smallerAddress, address largerAddress) = msg.sender < to ? (msg.sender, to) : (to, msg.sender);
 
@@ -229,7 +332,7 @@ contract Message is IMessage, Ownable {
         // Store conversation data based on who is the smaller address
         if (smallerAddress == msg.sender) {
             // Caller is smaller address - store keys in order
-            conversations[conversationId] = Conversation(
+            ds.conversations[conversationId] = MessageStorage.Conversation(
                 smallerAddress,
                 largerAddress,
                 encryptedConversationKeyForSender,
@@ -238,7 +341,7 @@ contract Message is IMessage, Ownable {
             );
         } else {
             // Caller is larger address - swap key positions to maintain consistency
-            conversations[conversationId] = Conversation(
+            ds.conversations[conversationId] = MessageStorage.Conversation(
                 largerAddress,
                 smallerAddress,
                 encryptedConversationKeyForReceiver,
@@ -288,8 +391,10 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function getMyEncryptedConversationKeys(uint256 conversationId) external view override returns (bytes memory encryptedConversationKeyForMe) {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Load conversation data
-        Conversation memory conv = conversations[conversationId];
+        MessageStorage.Conversation storage conv = ds.conversations[conversationId];
 
         // Verify conversation exists (createdAt > 0 indicates existence)
         require(conv.createdAt > 0, "Message: conversation does not exist");
@@ -318,11 +423,13 @@ contract Message is IMessage, Ownable {
      * @custom:reverts "Message: user does not have enough funds to pay the fee" if insufficient balance
      */
     function _chargeUserFunds(address user, uint256 amount) internal {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate user has sufficient deposited funds
-        require(funds[user] >= amount, "Message: user does not have enough funds to pay the fee");
+        require(ds.funds[user] >= amount, "Message: user does not have enough funds to pay the fee");
 
         // Deduct the fee from user's deposited balance
-        funds[user] -= amount;
+        ds.funds[user] -= amount;
         // Note: Funds remain in contract balance (no explicit transfer needed)
     }
 
@@ -352,12 +459,14 @@ contract Message is IMessage, Ownable {
      * messageContract.depositFunds{value: 0.01 ether}();
      * ```
      */
-    function depositFunds() external payable {
+    function depositFunds() external payable override {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate that ETH is being sent
         require(msg.value > 0, "Message: must send ETH");
 
         // Add deposited amount to user's balance
-        funds[msg.sender] += msg.value;
+        ds.funds[msg.sender] += msg.value;
 
         // Emit event for off-chain tracking
         emit FundsDeposited(msg.value, msg.sender, block.timestamp);
@@ -369,7 +478,7 @@ contract Message is IMessage, Ownable {
      * @notice Update the pay-as-you-go fee for direct message sending
      * @param newPayAsYouGoFee The new fee amount in wei
      *
-     * @dev This function allows the contract owner to adjust the pay-as-you-go fee.
+     * @dev This function allows the owner to adjust the pay-as-you-go fee.
      *      This fee is charged when users send messages directly via sendMessage().
      *
      * @dev Fee Strategy:
@@ -377,7 +486,7 @@ contract Message is IMessage, Ownable {
      *      - Consider gas costs when setting fee amounts
      *      - Fee changes take effect immediately
      *
-     * @custom:security Only callable by contract owner (onlyOwner modifier)
+     * @custom:security Only callable by owner (proxy owner in facet mode, stored owner in standalone mode)
      *
      * @custom:reverts "Message: Pay as you go fee must be greater than 0" if newPayAsYouGoFee is 0
      *
@@ -388,11 +497,13 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function setPayAsYouGoFee(uint256 newPayAsYouGoFee) external override onlyOwner {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate fee is greater than zero
         require(newPayAsYouGoFee > 0, "Message: Pay as you go fee must be greater than 0");
 
         // Update fee
-        payAsYouGoFee = newPayAsYouGoFee;
+        ds.payAsYouGoFee = newPayAsYouGoFee;
 
         // Emit event for off-chain tracking
         emit PayAsYouGoFeeSet(newPayAsYouGoFee, block.timestamp);
@@ -402,7 +513,7 @@ contract Message is IMessage, Ownable {
      * @notice Update the relayer fee for credit-based message sending
      * @param newRelayerFee The new fee amount in wei
      *
-     * @dev This function allows the contract owner to adjust the relayer fee.
+     * @dev This function allows the owner to adjust the relayer fee.
      *      This fee is charged when relayer sends messages via sendMessageViaRelayer().
      *
      * @dev Fee Strategy:
@@ -410,7 +521,7 @@ contract Message is IMessage, Ownable {
      *      - Lower fees encourage users to deposit credits and use relayer
      *      - Fee changes take effect immediately
      *
-     * @custom:security Only callable by contract owner (onlyOwner modifier)
+     * @custom:security Only callable by owner (proxy owner in facet mode, stored owner in standalone mode)
      *
      * @custom:reverts "Message: Relayer fee must be greater than 0" if newRelayerFee is 0
      *
@@ -421,11 +532,13 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function setRelayerFee(uint256 newRelayerFee) external override onlyOwner {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate fee is greater than zero
         require(newRelayerFee > 0, "Message: Relayer fee must be greater than 0");
 
         // Update fee
-        relayerFee = newRelayerFee;
+        ds.relayerFee = newRelayerFee;
 
         // Emit event for off-chain tracking
         emit RelayerFeeSet(newRelayerFee, block.timestamp);
@@ -437,7 +550,7 @@ contract Message is IMessage, Ownable {
      * @notice Set or update the relayer address authorized to send messages via relayer
      * @param newRelayer The address of the new relayer
      *
-     * @dev This function allows the contract owner to set or update the relayer address.
+     * @dev This function allows the owner to set or update the relayer address.
      *      The relayer is authorized to call sendMessageViaRelayer() on behalf of users.
      *
      * @dev Relayer Responsibilities:
@@ -450,7 +563,7 @@ contract Message is IMessage, Ownable {
      *      - Relayer cannot overcharge (fee amount is validated in sendMessageViaRelayer)
      *      - Only one relayer can be set at a time
      *
-     * @custom:security Only callable by contract owner (onlyOwner modifier)
+     * @custom:security Only callable by owner (proxy owner in facet mode, stored owner in standalone mode)
      *
      * @custom:reverts "Message: Relayer cannot be zero address" if newRelayer is address(0)
      *
@@ -461,11 +574,13 @@ contract Message is IMessage, Ownable {
      * ```
      */
     function setRelayer(address newRelayer) external override onlyOwner {
+        MessageStorage.MessageStorageStruct storage ds = MessageStorage.messageStorage();
+
         // Validate relayer is not zero address
         require(newRelayer != address(0), "Message: Relayer cannot be zero address");
 
         // Update relayer address
-        relayer = newRelayer;
+        ds.relayer = newRelayer;
 
         // Emit event for off-chain tracking
         emit RelayerSet(newRelayer, block.timestamp);
@@ -479,7 +594,7 @@ contract Message is IMessage, Ownable {
      * @dev This is a helper function used by the onlyRelayer modifier
      */
     function _isRelayer(address user) internal view returns (bool) {
-        return user == relayer;
+        return user == MessageStorage.messageStorage().relayer;
     }
 
     /**

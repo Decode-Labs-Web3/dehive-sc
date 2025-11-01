@@ -1,0 +1,15 @@
+{
+  "network": "sepolia",
+  "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+  "testResults": {
+    "conversationsCreated": 2,
+    "messagesSent": 2,
+    "messagesViaRelayer": 2,
+    "depositsMade": 1,
+    "adminFunctionsTested": 0,
+    "errors": [
+      "Method not found"
+    ]
+  },
+  "testedAt": "2025-11-01T07:18:36.929Z"
+}

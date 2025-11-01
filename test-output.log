@@ -1,0 +1,627 @@
+WARNING: You are currently using Node.js v25.0.0, which is not supported by Hardhat. This can lead to unexpected behavior. See https://hardhat.org/nodejs-versions
+
+
+
+
+  Complete Airdrop Flow
+    1. Factory Deployment and Airdrop Creation
+      ✔ Should deploy factory with correct implementation (259ms)
+      ✔ Should create and fund airdrop in single transaction
+      ✔ Should emit AirdropCreated event with correct parameters
+    2. Merkle Proof Verification and Claiming
+      ✔ Should allow valid claims with correct Merkle proof
+      ✔ Should reject invalid Merkle proofs
+      ✔ Should prevent double claiming
+    3. 7-Day Lock Mechanism
+      ✔ Should prevent withdrawal before 7 days
+      ✔ Should allow withdrawal after 7 days
+      ✔ Should show correct days until withdrawal
+    4. Claim Deadline Enforcement
+      ✔ Should prevent claims after deadline
+      ✔ Should show correct days until expiry
+    5. Complete End-to-End Flow
+      ✔ Should execute complete airdrop flow: create -> claim -> withdraw
+    6. Gas Optimization Tests
+Airdrop creation gas used: 887701
+Claim gas used: 81488
+      ✔ Should measure gas costs for key operations
+
+  Message Contract - Basic Functionality
+    Contract Deployment
+      ✔ Should deploy with correct owner
+      ✔ Should have correct initial fees
+      ✔ Should set relayer correctly
+    Conversation Creation
+      ✔ Should create a conversation between two users
+      ✔ Should return the same conversation ID regardless of who creates it
+      ✔ Should allow users to retrieve their encrypted conversation key
+    Direct Message Sending (Pay-as-You-Go)
+      ✔ Should send a message directly with correct fee payment
+      ✔ Should refund excess payment
+      ✔ Should fail if insufficient fee is paid
+    Relayer Message Sending (Credit-Based)
+      ✔ Should deposit funds successfully
+      ✔ Should send message via relayer with deposited funds
+      ✔ Should fail if user has insufficient funds
+    Fee Configuration
+      ✔ Should update pay-as-you-go fee
+      ✔ Should update relayer fee
+    Message Fetching
+      ✔ Should fetch all messages from contract
+      ✔ Should fetch messages for a specific conversation
+
+  Message Contract - Edge Cases
+    Zero Address Handling
+      ✔ Should revert when sending message to zero address
+      ✔ Should revert when setting relayer to zero address
+    Invalid Conversation IDs
+      ✔ Should revert when sending message to non-existent conversation
+      ✔ Should revert when retrieving key for non-existent conversation
+      ✔ Should revert when non-participant tries to retrieve conversation key
+    Insufficient Funds Scenarios
+      ✔ Should revert when sending message with insufficient fee
+      ✔ Should revert when relayer tries to charge from user with insufficient funds
+      ✔ Should revert when relayer tries to charge from user with zero balance
+    Invalid Fee Amounts
+      ✔ Should revert when relayer tries to charge incorrect fee
+      ✔ Should revert when setting zero pay-as-you-go fee
+      ✔ Should revert when setting zero relayer fee
+    Unauthorized Access
+      ✔ Should revert when non-relayer tries to send via relayer
+      ✔ Should revert when non-owner tries to update fees
+      ✔ Should revert when non-owner tries to set relayer
+    Empty/Zero Value Deposits
+      ✔ Should revert when depositing zero value
+    Multiple Transactions Edge Cases
+      ✔ Should handle multiple messages in quick succession
+      ✔ Should handle depleted funds after multiple relayer messages
+    Conversation Re-creation
+      ✔ Should allow updating conversation if already created
+
+  MessageFacet - Proxy Integration
+    Facet Installation
+      1) Should deploy proxy and facet successfully
+      2) Should install MessageFacet into proxy
+      3) Should initialize MessageFacet through proxy
+    Message Functions via Proxy
+      4) Should create conversation through proxy
+      5) Should send message through proxy (pay-as-you-go)
+      6) Should send message via relayer through proxy
+      7) Should deposit funds through proxy
+      8) Should retrieve encrypted conversation key through proxy
+    Admin Functions via Proxy
+      9) Should set pay-as-you-go fee through proxy
+      10) Should set relayer fee through proxy
+      11) Should set relayer through proxy
+    Storage Isolation
+      12) Should maintain separate storage for different conversations
+
+  MessageFacet - Edge Cases
+    Initialization
+      13) Should prevent re-initialization of facet
+    Facet Upgrade Scenario
+      14) Should maintain storage after facet operations
+    Storage Isolation
+      15) Should isolate storage between standalone and proxy modes
+    Multiple Facets (if applicable)
+      16) Should allow multiple facets to coexist
+
+  MessageFacet - Load Tests
+    Load Testing
+      17) Should handle 100+ messages through proxy
+      18) Should handle bulk relayer messages through proxy
+      19) Should compare gas costs: standalone vs proxy
+
+  MessageFacet - Owner Functions
+    Proxy Owner Access Control
+      20) Should allow proxy owner to set pay-as-you-go fee
+      21) Should allow proxy owner to set relayer fee
+      22) Should allow proxy owner to set relayer address
+      23) Should prevent non-owner from setting pay-as-you-go fee
+      24) Should prevent non-owner from setting relayer fee
+      25) Should prevent non-owner from setting relayer
+    Relayer Functionality
+      26) Should allow relayer to send messages via relayer
+      27) Should prevent non-relayer from sending via relayer
+      28) Should allow proxy owner to change relayer and still work
+
+  Message Contract - Frontend Simulation
+    Frontend User Session Simulation
+      ✔ Should simulate complete user session: create conversation -> send messages -> fetch history
+      ✔ Should simulate multiple conversations per user
+    Frontend Message Fetching and Decryption
+      ✔ Should fetch and decrypt messages for a conversation
+      ✔ Should fetch messages by sender and decrypt them
+      ✔ Should fetch messages by receiver and decrypt them
+    Frontend Message Pagination
+      ✔ Should paginate messages correctly
+    Frontend Message Filtering
+      ✔ Should filter messages by time range (4009ms)
+    Frontend Real-time Message Monitoring
+      ✔ Should simulate real-time message monitoring (1310ms)
+    Frontend Conversation List Building
+      ✔ Should build conversation list for a user
+    Frontend Message Threading
+      ✔ Should display messages in chronological order within a conversation
+
+  Message Contract - Load Tests (100+ Messages)
+    Load Test - Direct Messages (Pay-as-You-Go)
+
+Sent 100 messages:
+  Total gas used: 3711428
+  Average gas per message: 37114
+  Min gas: 35559
+  Max gas: 53276
+      ✔ Should handle 100+ direct messages successfully (136ms)
+      ✔ Should handle 150 messages across multiple conversations (412ms)
+    Load Test - Relayer Messages (Credit-Based)
+
+Sent 120 relayer messages:
+  Total gas used: 4799832
+  Average gas per message: 39998
+      ✔ Should handle 100+ relayer messages successfully (122ms)
+    Load Test - Mixed Message Types
+      ✔ Should handle mix of direct and relayer messages (100+ total) (79ms)
+    Load Test - Message Fetching Performance
+
+Fetching Performance:
+  Fetch all messages (100): 17ms
+  Fetch conversation messages (100): 16ms
+      ✔ Should efficiently fetch 100+ messages (92ms)
+    Load Test - Concurrent Message Sending
+      ✔ Should handle concurrent message sending (100+ messages) (133ms)
+
+
+  63 passing (7s)
+  28 failing
+
+  1) MessageFacet - Proxy Integration
+       Facet Installation
+         Should deploy proxy and facet successfully:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:102:9)
+  
+
+  2) MessageFacet - Proxy Integration
+       Facet Installation
+         Should install MessageFacet into proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:109:58)
+  
+
+  3) MessageFacet - Proxy Integration
+       Facet Installation
+         Should initialize MessageFacet through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:127:42)
+  
+
+  4) MessageFacet - Proxy Integration
+       Message Functions via Proxy
+         Should create conversation through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:140:49)
+  
+
+  5) MessageFacet - Proxy Integration
+       Message Functions via Proxy
+         Should send message through proxy (pay-as-you-go):
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:160:49)
+  
+
+  6) MessageFacet - Proxy Integration
+       Message Functions via Proxy
+         Should send message via relayer through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:198:58)
+  
+
+  7) MessageFacet - Proxy Integration
+       Message Functions via Proxy
+         Should deposit funds through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:243:42)
+  
+
+  8) MessageFacet - Proxy Integration
+       Message Functions via Proxy
+         Should retrieve encrypted conversation key through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:261:49)
+  
+
+  9) MessageFacet - Proxy Integration
+       Admin Functions via Proxy
+         Should set pay-as-you-go fee through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:322:42)
+  
+
+  10) MessageFacet - Proxy Integration
+       Admin Functions via Proxy
+         Should set relayer fee through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:338:42)
+  
+
+  11) MessageFacet - Proxy Integration
+       Admin Functions via Proxy
+         Should set relayer through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:354:51)
+  
+
+  12) MessageFacet - Proxy Integration
+       Storage Isolation
+         Should maintain separate storage for different conversations:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacet.test.ts:72:23)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacet.test.ts:376:56)
+  
+
+  13) MessageFacet - Edge Cases
+       Initialization
+         Should prevent re-initialization of facet:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetEdgeCases.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetEdgeCases.test.ts:70:63)
+  
+
+  14) MessageFacet - Edge Cases
+       Facet Upgrade Scenario
+         Should maintain storage after facet operations:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetEdgeCases.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetEdgeCases.test.ts:98:49)
+  
+
+  15) MessageFacet - Edge Cases
+       Storage Isolation
+         Should isolate storage between standalone and proxy modes:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetEdgeCases.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetEdgeCases.test.ts:131:63)
+  
+
+  16) MessageFacet - Edge Cases
+       Multiple Facets (if applicable)
+         Should allow multiple facets to coexist:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetEdgeCases.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetEdgeCases.test.ts:177:32)
+  
+
+  17) MessageFacet - Load Tests
+       Load Testing
+         Should handle 100+ messages through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetLoad.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetLoad.test.ts:68:49)
+  
+
+  18) MessageFacet - Load Tests
+       Load Testing
+         Should handle bulk relayer messages through proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetLoad.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetLoad.test.ts:120:58)
+  
+
+  19) MessageFacet - Load Tests
+       Load Testing
+         Should compare gas costs: standalone vs proxy:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetLoad.test.ts:52:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetLoad.test.ts:178:39)
+  
+
+  20) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should allow proxy owner to set pay-as-you-go fee:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:73:42)
+  
+
+  21) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should allow proxy owner to set relayer fee:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:92:42)
+  
+
+  22) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should allow proxy owner to set relayer address:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:111:42)
+  
+
+  23) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should prevent non-owner from setting pay-as-you-go fee:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:132:45)
+  
+
+  24) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should prevent non-owner from setting relayer fee:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:143:45)
+  
+
+  25) MessageFacet - Owner Functions
+       Proxy Owner Access Control
+         Should prevent non-owner from setting relayer:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:154:45)
+  
+
+  26) MessageFacet - Owner Functions
+       Relayer Functionality
+         Should allow relayer to send messages via relayer:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:168:9)
+  
+
+  27) MessageFacet - Owner Functions
+       Relayer Functionality
+         Should prevent non-relayer from sending via relayer:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:209:9)
+  
+
+  28) MessageFacet - Owner Functions
+       Relayer Functionality
+         Should allow proxy owner to change relayer and still work:
+     Error: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at DehiveProxy.onlyOwner (contracts/DehiveProxy.sol:71)
+    at DehiveProxy.facetCut (contracts/DehiveProxy.sol:145)
+    at EdrProviderWrapper.request (node_modules/hardhat/src/internal/hardhat-network/provider/provider.ts:359:41)
+    at async HardhatEthersSigner.sendTransaction (node_modules/@nomicfoundation/hardhat-ethers/src/signers.ts:181:18)
+    at async send (node_modules/ethers/src.ts/contract/contract.ts:313:20)
+    at async Proxy.facetCut (node_modules/ethers/src.ts/contract/contract.ts:352:16)
+    at async deployProxyAndFacet (test/MessageFacetOwner.test.ts:56:5)
+    at async loadFixture (node_modules/@nomicfoundation/hardhat-network-helpers/src/loadFixture.ts:59:18)
+    at async Context.<anonymous> (test/MessageFacetOwner.test.ts:250:9)
+  
+
+
+

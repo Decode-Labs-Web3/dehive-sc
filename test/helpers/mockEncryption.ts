@@ -84,9 +84,9 @@ export function encryptConversationKeyForAddress(
   for (let i = 0; i < conversationKey.length; i++) {
     const keyChar = conversationKey[i];
     const hashChar = addressHash[i % addressHash.length];
-    const encryptedChar = (
-      parseInt(keyChar, 16) ^ parseInt(hashChar, 16)
-    ).toString(16);
+    const encryptedChar = (parseInt(keyChar, 16) ^ parseInt(hashChar, 16))
+      .toString(16)
+      .padStart(1, "0");
     encrypted += encryptedChar;
   }
   return encrypted;
@@ -113,9 +113,9 @@ export function decryptConversationKeyForAddress(
   for (let i = 0; i < encryptedKey.length; i++) {
     const encChar = encryptedKey[i];
     const hashChar = addressHash[i % addressHash.length];
-    const decryptedChar = (
-      parseInt(encChar, 16) ^ parseInt(hashChar, 16)
-    ).toString(16);
+    const decryptedChar = (parseInt(encChar, 16) ^ parseInt(hashChar, 16))
+      .toString(16)
+      .padStart(1, "0");
     decrypted += decryptedChar;
   }
   return decrypted;

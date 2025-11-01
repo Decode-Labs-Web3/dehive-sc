@@ -1,0 +1,57 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "verifiedAt": "2025-11-01T08:36:02.763Z",
+  "results": [
+    {
+      "contract": "MessageFacet",
+      "address": "0xEd0E195310A1419c309935DCe97fCA507d82DE11",
+      "status": "success"
+    },
+    {
+      "contract": "DehiveProxy",
+      "address": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+      "status": "success"
+    }
+  ],
+  "deploymentInfo": {
+    "network": "sepolia",
+    "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+    "facetAddress": "0xEd0E195310A1419c309935DCe97fCA507d82DE11",
+    "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "deployer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "relayer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "payAsYouGoFee": "200000000000",
+    "relayerFee": "100000000000",
+    "functionSelectors": [
+      "0xdd91150b",
+      "0xf1b7fd5e",
+      "0xe2c41dbc",
+      "0xe2ae93fb",
+      "0xf8b1b13f",
+      "0x19ab453c",
+      "0x8da5cb5b",
+      "0x9b633201",
+      "0x8406c079",
+      "0x2fdeb111",
+      "0x2da17371",
+      "0xba89428e",
+      "0x3453b624",
+      "0x6548e9bc",
+      "0x83302a6f"
+    ],
+    "deployedAt": 1761980209275,
+    "transactionHashes": {
+      "proxyDeployment": "0xdc67e06ad4fcca07c967c1a2e24b48227e557d8c651842fe1b7aa4dc741ad6bc",
+      "facetDeployment": "0xfd7a5633c5213f54c65ddb606c5958812fa199db558cd9c976ec5c32835ff5d5",
+      "facetInstallation": "0x409cb57c57b6455fed36bedca887e5417729f7ab6fdcef66ad70ca26600a5bd9",
+      "relayerSetup": "0x5486acfd92e47ce1734e29a72fffcc3c49adf31f1735333a40660a335482a136"
+    },
+    "blockNumbers": {
+      "proxyDeployment": 9535551,
+      "facetDeployment": 9535552,
+      "facetInstallation": 9535553,
+      "relayerSetup": 9535554
+    }
+  }
+}

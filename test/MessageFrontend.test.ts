@@ -472,9 +472,9 @@ describe("Message Contract - Frontend Simulation", function () {
 
       // Send messages at different times
       const payAsYouGoFee = await messageContract.payAsYouGoFee();
-      const startTime = Math.floor(Date.now() / 1000);
 
-      await messageContract
+      // Send first message and get its timestamp
+      const tx1 = await messageContract
         .connect(user1)
         .sendMessage(
           conversationId,
@@ -484,13 +484,15 @@ describe("Message Contract - Frontend Simulation", function () {
             value: payAsYouGoFee,
           }
         );
+      const receipt1 = await tx1.wait();
+      const block1 = await ethers.provider.getBlock(receipt1!.blockNumber);
+      const startTime = block1!.timestamp;
 
       // Wait a bit
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      const midTime = Math.floor(Date.now() / 1000);
-
-      await messageContract
+      // Send second message
+      const tx2 = await messageContract
         .connect(user1)
         .sendMessage(
           conversationId,
@@ -500,10 +502,14 @@ describe("Message Contract - Frontend Simulation", function () {
             value: payAsYouGoFee,
           }
         );
+      const receipt2 = await tx2.wait();
+      const block2 = await ethers.provider.getBlock(receipt2!.blockNumber);
+      const midTime = block2!.timestamp;
 
       // Wait a bit
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
+      // Send third message
       await messageContract
         .connect(user1)
         .sendMessage(
@@ -515,9 +521,7 @@ describe("Message Contract - Frontend Simulation", function () {
           }
         );
 
-      const endTime = Math.floor(Date.now() / 1000);
-
-      // Frontend: Filter messages by time range
+      // Frontend: Filter messages by time range (from start to mid)
       const allMessages = await fetchConversationMessages(
         messageContract,
         conversationId
@@ -525,10 +529,10 @@ describe("Message Contract - Frontend Simulation", function () {
       const filteredMessages = filterMessagesByTimeRange(
         allMessages,
         startTime,
-        midTime
+        midTime + 1 // Include messages up to and including midTime
       );
 
-      // Should include messages within the time range
+      // Should include at least the first message (and possibly the second)
       expect(filteredMessages.length).to.be.at.least(1);
     });
   });
