@@ -1,0 +1,49 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "verifiedAt": "2025-11-03T15:24:23.293Z",
+  "results": [
+    {
+      "contract": "MerkleAirdrop",
+      "address": "0x1910CaEF722E6811a8b293942DFfFb7c38c23b48",
+      "status": "success"
+    },
+    {
+      "contract": "AirdropFactory",
+      "address": "0xbB74D9DbDA62E8cc28DcC59a461F903D9E5246E0",
+      "status": "success"
+    },
+    {
+      "contract": "ServerAirdropRegistry",
+      "address": "0x387D6D818F0cafF8a98E9EFecB75694246cF8D92",
+      "status": "success"
+    },
+    {
+      "contract": "MockERC20",
+      "address": "0xcC3df6A7a1Fae6f1eDD72d53A33a1eE215afEB10",
+      "status": "success"
+    }
+  ],
+  "deploymentInfo": {
+    "network": "sepolia",
+    "registryAddress": "0x387D6D818F0cafF8a98E9EFecB75694246cF8D92",
+    "factoryImplementationAddress": "0xbB74D9DbDA62E8cc28DcC59a461F903D9E5246E0",
+    "merkleAirdropImplementationAddress": "0x1910CaEF722E6811a8b293942DFfFb7c38c23b48",
+    "dummyTokenAddress": "0xcC3df6A7a1Fae6f1eDD72d53A33a1eE215afEB10",
+    "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "deployer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "deployedAt": 1762183167165,
+    "transactionHashes": {
+      "dummyTokenDeployment": "0xf5d50c110c0d4cf691650f973b95456cbc4fe3369243c853ca21da789e1ac146",
+      "merkleAirdropDeployment": "0x52adbae1dc0096d1bac1a869a43b7265d5f8a382da39c83bdafb24044f7a5ab0",
+      "factoryDeployment": "0x86d7c6aea6c3a3c31bf17c6cad047c7f90055b8981c5f7394c55fc90534bbcb8",
+      "registryDeployment": "0x8c74dc1a4c8e39452f15f172da1c371916909fbec4ad876a561c1184a8060620"
+    },
+    "blockNumbers": {
+      "dummyTokenDeployment": 9552431,
+      "merkleAirdropDeployment": 9552432,
+      "factoryDeployment": 9552433,
+      "registryDeployment": 9552434
+    }
+  }
+}

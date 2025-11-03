@@ -55,10 +55,10 @@ interface CampaignData {
 
 // Deployed contract addresses on Sepolia
 const DEPLOYED_ADDRESSES = {
-  registry: "0xac2FeCc2Bca3221B6eEf8A92B0dF29fA0BfdAFa2",
-  factory: "0xAcff01C4509cC6B2BD770F59c3c6F2061E5F0bf0",
-  merkleAirdrop: "0x82953eE584b0b5Bbf097810FD538c81646A1e256",
-  dummyToken: "0x71d0e59ee19A5F944f2e0E3b2fce472567c63115",
+  registry: process.env.REGISTRY_ADDRESS,
+  factory: process.env.FACTORY_ADDRESS,
+  merkleAirdrop: process.env.MERKLE_AIRDROP_ADDRESS,
+  dummyToken: process.env.DUMMY_TOKEN_ADDRESS,
 };
 
 async function main() {

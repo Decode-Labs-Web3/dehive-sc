@@ -1,22 +1,22 @@
 {
   "network": "sepolia",
-  "registryAddress": "0xac2FeCc2Bca3221B6eEf8A92B0dF29fA0BfdAFa2",
-  "factoryImplementationAddress": "0xAcff01C4509cC6B2BD770F59c3c6F2061E5F0bf0",
-  "merkleAirdropImplementationAddress": "0x82953eE584b0b5Bbf097810FD538c81646A1e256",
-  "dummyTokenAddress": "0x71d0e59ee19A5F944f2e0E3b2fce472567c63115",
+  "registryAddress": "0x387D6D818F0cafF8a98E9EFecB75694246cF8D92",
+  "factoryImplementationAddress": "0xbB74D9DbDA62E8cc28DcC59a461F903D9E5246E0",
+  "merkleAirdropImplementationAddress": "0x1910CaEF722E6811a8b293942DFfFb7c38c23b48",
+  "dummyTokenAddress": "0xcC3df6A7a1Fae6f1eDD72d53A33a1eE215afEB10",
   "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
   "deployer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
-  "deployedAt": 1762164638125,
+  "deployedAt": 1762183167165,
   "transactionHashes": {
-    "dummyTokenDeployment": "0xb30fcfe764104c98485d495baa3668f7b35522174f330bcc9768fa3240d769aa",
-    "merkleAirdropDeployment": "0x9b58d1b273c38d09d84d79329d462514f6f3bca7339a2a1e07be6ea781fd3fd7",
-    "factoryDeployment": "0xacbb3783bb749ad244d266c6d4a7ebd1473b66f222cce62ecfb63c5b96181140",
-    "registryDeployment": "0x59f97aa746c0931a3cbf7960714acea74a0cbe239d4127aa10feba9cc7f888cd"
+    "dummyTokenDeployment": "0xf5d50c110c0d4cf691650f973b95456cbc4fe3369243c853ca21da789e1ac146",
+    "merkleAirdropDeployment": "0x52adbae1dc0096d1bac1a869a43b7265d5f8a382da39c83bdafb24044f7a5ab0",
+    "factoryDeployment": "0x86d7c6aea6c3a3c31bf17c6cad047c7f90055b8981c5f7394c55fc90534bbcb8",
+    "registryDeployment": "0x8c74dc1a4c8e39452f15f172da1c371916909fbec4ad876a561c1184a8060620"
   },
   "blockNumbers": {
-    "dummyTokenDeployment": 9550892,
-    "merkleAirdropDeployment": 9550894,
-    "factoryDeployment": 9550896,
-    "registryDeployment": 9550897
+    "dummyTokenDeployment": 9552431,
+    "merkleAirdropDeployment": 9552432,
+    "factoryDeployment": 9552433,
+    "registryDeployment": 9552434
   }
 }
