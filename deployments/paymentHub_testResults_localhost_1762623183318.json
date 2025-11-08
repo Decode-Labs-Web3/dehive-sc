@@ -1,0 +1,32 @@
+{
+  "network": "localhost",
+  "timestamp": "2025-11-08T17:33:03.318Z",
+  "deployments": {
+    "mockToken": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
+    "standalone": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "proxy": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+    "facet": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
+  },
+  "results": {
+    "standaloneTests": {
+      "nativePayments": 2,
+      "erc20Payments": 1,
+      "feeUpdates": 1,
+      "feeWithdrawals": 1
+    },
+    "facetTests": {
+      "nativePayments": 1,
+      "erc20Payments": 1,
+      "feeUpdates": 0,
+      "feeWithdrawals": 0
+    },
+    "loadTests": {
+      "totalPayments": 50,
+      "nativePayments": 25,
+      "erc20Payments": 25
+    },
+    "errors": [
+      "Facet fee management failed: Error: VM Exception while processing transaction: reverted with reason string 'PaymentHub: caller is not the owner'"
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "network": "localhost",
+  "timestamp": "2025-11-08T17:37:06.765Z",
+  "deployments": {
+    "mockToken": "0x1291Be112d480055DaFd8a610b7d1e203891C274",
+    "standalone": "0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3",
+    "proxy": "0x7969c5eD335650692Bc04293B07F5BF2e7A673C0",
+    "facet": "0x7bc06c482DEAd17c0e297aFbC32f6e63d3846650"
+  },
+  "results": {
+    "standaloneTests": {
+      "nativePayments": 2,
+      "erc20Payments": 1,
+      "feeUpdates": 1,
+      "feeWithdrawals": 1
+    },
+    "facetTests": {
+      "nativePayments": 1,
+      "erc20Payments": 1,
+      "feeUpdates": 0,
+      "feeWithdrawals": 0
+    },
+    "loadTests": {
+      "totalPayments": 50,
+      "nativePayments": 25,
+      "erc20Payments": 25
+    },
+    "errors": []
+  }
+}

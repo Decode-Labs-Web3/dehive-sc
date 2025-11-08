@@ -1,0 +1,104 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+  "tester": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "timestamp": "2025-11-05T04:57:12.530Z",
+  "summary": {
+    "pass": 12,
+    "fail": 0,
+    "warn": 0,
+    "total": 12
+  },
+  "results": [
+    {
+      "test": "Facet Installation",
+      "status": "PASS",
+      "message": "1 facet(s) installed",
+      "details": {
+        "facets": [
+          "0xEd0E195310A1419c309935DCe97fCA507d82DE11"
+        ]
+      }
+    },
+    {
+      "test": "Function Selector Mapping",
+      "status": "PASS",
+      "message": "All 15 function selectors correctly mapped",
+      "details": {
+        "mapped": 15,
+        "unmapped": 0
+      }
+    },
+    {
+      "test": "Read: owner()",
+      "status": "PASS",
+      "message": "Successfully read owner through proxy",
+      "details": {
+        "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE"
+      }
+    },
+    {
+      "test": "Read: payAsYouGoFee()",
+      "status": "PASS",
+      "message": "Successfully read payAsYouGoFee through proxy",
+      "details": {
+        "fee": "200000000000"
+      }
+    },
+    {
+      "test": "Read: relayerFee()",
+      "status": "PASS",
+      "message": "Successfully read relayerFee through proxy",
+      "details": {
+        "fee": "100000000000"
+      }
+    },
+    {
+      "test": "Read: relayer()",
+      "status": "PASS",
+      "message": "Successfully read relayer through proxy",
+      "details": {
+        "relayer": "0xa6911D2f9e2f9bE993FD71768eE05876390948e9"
+      }
+    },
+    {
+      "test": "Read: funds()",
+      "status": "PASS",
+      "message": "Successfully read funds through proxy",
+      "details": {
+        "user": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+        "balance": "0"
+      }
+    },
+    {
+      "test": "Write: setRelayer()",
+      "status": "PASS",
+      "message": "Successfully simulated setRelayer through proxy"
+    },
+    {
+      "test": "Write: setPayAsYouGoFee()",
+      "status": "PASS",
+      "message": "Successfully simulated setPayAsYouGoFee through proxy"
+    },
+    {
+      "test": "Write: setRelayerFee()",
+      "status": "PASS",
+      "message": "Successfully simulated setRelayerFee through proxy"
+    },
+    {
+      "test": "Write: depositFunds()",
+      "status": "PASS",
+      "message": "Successfully simulated depositFunds through proxy"
+    },
+    {
+      "test": "Storage Architecture",
+      "status": "PASS",
+      "message": "Proxy owner correctly accessible through Message facet",
+      "details": {
+        "proxyOwner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+        "messageOwner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE"
+      }
+    }
+  ]
+}
