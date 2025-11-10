@@ -47,12 +47,17 @@ import { computeConversationId } from "../test/helpers/conversationHelpers";
  * 1. Uses 3 wallets from environment variables (PRIVATE_KEY, PRIVATE_KEY_A, PRIVATE_KEY_B)
  * 2. PRIVATE_KEY is the owner/deployer
  * 3. PRIVATE_KEY_A and PRIVATE_KEY_B are test users
- * 4. Tests all core functionality
- * 5. Simulates real-world user interactions
- * 6. Tests cross-component integration
+ * 4. Uses existing deployed contracts from .env:
+ *    - PROXY_ADDRESS
+ *    - MESSAGE_FACET_ADDRESS
+ *    - PAYMENT_FACET_ADDRESS (or PAYMENT_HUB_FACET_ADDRESS)
+ * 5. Tests all core functionality
+ * 6. Simulates real-world user interactions
+ * 7. Tests cross-component integration
  *
  * Usage:
  *   PRIVATE_KEY=<owner_key> PRIVATE_KEY_A=<user_a_key> PRIVATE_KEY_B=<user_b_key> \
+ *   PROXY_ADDRESS=<proxy> MESSAGE_FACET_ADDRESS=<message> PAYMENT_FACET_ADDRESS=<payment> \
  *   npx hardhat run scripts/testCompleteSystemSepolia.ts --network sepolia
  */
 
@@ -127,9 +132,21 @@ async function main() {
   const privateKeyA = process.env.PRIVATE_KEY_A;
   const privateKeyB = process.env.PRIVATE_KEY_B;
 
+  // Load deployed contract addresses from environment
+  const proxyAddress = process.env.PROXY_ADDRESS;
+  const messageFacetAddress = process.env.MESSAGE_FACET_ADDRESS;
+  const paymentFacetAddress =
+    process.env.PAYMENT_FACET_ADDRESS || process.env.PAYMENT_HUB_FACET_ADDRESS;
+
   if (!privateKey || !privateKeyA || !privateKeyB) {
     throw new Error(
       "Missing required environment variables: PRIVATE_KEY, PRIVATE_KEY_A, PRIVATE_KEY_B"
+    );
+  }
+
+  if (!proxyAddress || !messageFacetAddress || !paymentFacetAddress) {
+    throw new Error(
+      "Missing required contract addresses in .env: PROXY_ADDRESS, MESSAGE_FACET_ADDRESS, PAYMENT_FACET_ADDRESS"
     );
   }
 
@@ -144,6 +161,10 @@ async function main() {
   console.log(`  Owner/Deployer: ${owner.address}`);
   console.log(`  User A: ${userA.address}`);
   console.log(`  User B: ${userB.address}`);
+  console.log(`\n📦 Using Existing Deployed Contracts:`);
+  console.log(`  Proxy: ${proxyAddress}`);
+  console.log(`  Message Facet: ${messageFacetAddress}`);
+  console.log(`  Payment Facet: ${paymentFacetAddress}`);
 
   // Check balances
   const ownerBalance = await provider.getBalance(owner.address);
@@ -202,136 +223,66 @@ async function main() {
     },
   };
 
-  // ========== PHASE 1: SYSTEM DEPLOYMENT ==========
+  // ========== PHASE 1: CONNECT TO EXISTING SYSTEM ==========
   console.log("\n" + "=".repeat(100));
-  console.log("PHASE 1: SYSTEM DEPLOYMENT");
+  console.log("PHASE 1: CONNECTING TO EXISTING DEPLOYED SYSTEM");
   console.log("=".repeat(100));
 
   let deployedSystem: SystemDeployment;
 
   try {
-    // Deploy Proxy
-    console.log("\n1.1 Deploying DehiveProxy...");
+    // Connect to existing Proxy
+    console.log("\n1.1 Connecting to existing DehiveProxy...");
     const ProxyFactory = await ethers.getContractFactory("DehiveProxy");
-    const proxy = await ProxyFactory.connect(owner).deploy();
-    await proxy.waitForDeployment();
-    const proxyAddress = await proxy.getAddress();
-    console.log(`  ✓ DehiveProxy deployed: ${proxyAddress}`);
+    const proxy = ProxyFactory.attach(proxyAddress) as DehiveProxy;
 
-    // Deploy Message Facet
-    console.log("\n1.2 Deploying Message Facet...");
-    const MessageFactory = await ethers.getContractFactory("Message");
-    const messageFacet = await MessageFactory.connect(owner).deploy(
-      owner.address
-    );
-    await messageFacet.waitForDeployment();
-    const messageFacetAddress = await messageFacet.getAddress();
-    console.log(`  ✓ Message Facet deployed: ${messageFacetAddress}`);
-
-    // Install Message Facet
-    console.log("\n1.3 Installing Message Facet into Proxy...");
-    const imessageArtifactPath = path.join(
-      __dirname,
-      "../artifacts/contracts/interfaces/IMessage.sol/IMessage.json"
-    );
-    const imessageAbi = JSON.parse(
-      fs.readFileSync(imessageArtifactPath, "utf-8")
-    ).abi;
-    const messageSelectors = getFunctionSelectors(imessageAbi);
-
-    const messageFacetCut = {
-      facetAddress: messageFacetAddress,
-      functionSelectors: messageSelectors,
-      action: 0, // Add
-    };
-
-    const messageArtifactPath = path.join(
-      __dirname,
-      "../artifacts/contracts/Message.sol/Message.json"
-    );
-    const messageAbi = JSON.parse(
-      fs.readFileSync(messageArtifactPath, "utf-8")
-    ).abi;
-
-    const messageInitCalldata = ethers.Interface.from(
-      messageAbi
-    ).encodeFunctionData("init", [owner.address]);
-
-    const messageInstallTx = await proxy
-      .connect(owner)
-      .facetCut([messageFacetCut], messageFacetAddress, messageInitCalldata);
-    await messageInstallTx.wait();
-    console.log(`  ✓ Message Facet installed`);
-
-    // Deploy PaymentHub Facet
-    console.log("\n1.4 Deploying PaymentHub Facet...");
-    const PaymentHubFactory = await ethers.getContractFactory("PaymentHub");
-    const paymentHubFacet = await PaymentHubFactory.connect(owner).deploy(
-      owner.address
-    );
-    await paymentHubFacet.waitForDeployment();
-    const paymentHubFacetAddress = await paymentHubFacet.getAddress();
-    console.log(`  ✓ PaymentHub Facet deployed: ${paymentHubFacetAddress}`);
-
-    // Install PaymentHub Facet
-    console.log("\n1.5 Installing PaymentHub Facet into Proxy...");
-    const ipaymenthubArtifactPath = path.join(
-      __dirname,
-      "../artifacts/contracts/interfaces/IPaymentHub.sol/IPaymentHub.json"
-    );
-    const ipaymenthubAbi = JSON.parse(
-      fs.readFileSync(ipaymenthubArtifactPath, "utf-8")
-    ).abi;
-    const paymentHubSelectors = getFunctionSelectors(ipaymenthubAbi);
-
-    // Check for conflicts
-    const installedFacets = await proxy.facetAddresses();
-    const selectorToFacet: Map<string, string> = new Map();
-    for (const facetAddr of installedFacets) {
-      const selectors = await proxy.facetFunctionSelectors(facetAddr);
-      for (const selector of selectors) {
-        selectorToFacet.set(selector.toLowerCase(), facetAddr);
-      }
-    }
-
-    const availableSelectors = paymentHubSelectors.filter(
-      (s) => !selectorToFacet.has(s.toLowerCase())
-    );
-
-    if (availableSelectors.length > 0) {
-      const paymentHubFacetCut = {
-        facetAddress: paymentHubFacetAddress,
-        functionSelectors: availableSelectors,
-        action: 0, // Add
-      };
-
-      const paymenthubArtifactPath = path.join(
-        __dirname,
-        "../artifacts/contracts/PaymentHub.sol/PaymentHub.json"
+    // Verify proxy is accessible
+    try {
+      const proxyOwner = await proxy.owner();
+      console.log(`  ✓ DehiveProxy connected: ${proxyAddress}`);
+      console.log(`  ✓ Proxy owner: ${proxyOwner}`);
+    } catch (error: any) {
+      throw new Error(
+        `Proxy at ${proxyAddress} is not accessible: ${error.message}`
       );
-      const paymenthubAbi = JSON.parse(
-        fs.readFileSync(paymenthubArtifactPath, "utf-8")
-      ).abi;
-
-      const paymentHubInitCalldata = ethers.Interface.from(
-        paymenthubAbi
-      ).encodeFunctionData("init", [owner.address]);
-
-      const paymentHubInstallTx = await proxy
-        .connect(owner)
-        .facetCut(
-          [paymentHubFacetCut],
-          paymentHubFacetAddress,
-          paymentHubInitCalldata
-        );
-      await paymentHubInstallTx.wait();
-      console.log(`  ✓ PaymentHub Facet installed`);
-    } else {
-      console.log(`  ⚠️  All PaymentHub selectors already installed`);
     }
 
-    // Deploy Airdrop System
-    console.log("\n1.6 Deploying Airdrop System...");
+    // Connect to existing Message Facet
+    console.log("\n1.2 Connecting to existing Message Facet...");
+    const MessageFactory = await ethers.getContractFactory("Message");
+    const messageFacet = MessageFactory.attach(messageFacetAddress) as Message;
+
+    // Verify message facet is accessible
+    try {
+      const messageFacetOwner = await messageFacet.owner();
+      console.log(`  ✓ Message Facet connected: ${messageFacetAddress}`);
+      console.log(`  ✓ Message Facet owner: ${messageFacetOwner}`);
+    } catch (error: any) {
+      throw new Error(
+        `Message Facet at ${messageFacetAddress} is not accessible: ${error.message}`
+      );
+    }
+
+    // Connect to existing PaymentHub Facet
+    console.log("\n1.3 Connecting to existing PaymentHub Facet...");
+    const PaymentHubFactory = await ethers.getContractFactory("PaymentHub");
+    const paymentHubFacet = PaymentHubFactory.attach(
+      paymentFacetAddress
+    ) as PaymentHub;
+
+    // Verify payment hub facet is accessible
+    try {
+      const paymentHubFacetOwner = await paymentHubFacet.owner();
+      console.log(`  ✓ PaymentHub Facet connected: ${paymentFacetAddress}`);
+      console.log(`  ✓ PaymentHub Facet owner: ${paymentHubFacetOwner}`);
+    } catch (error: any) {
+      throw new Error(
+        `PaymentHub Facet at ${paymentFacetAddress} is not accessible: ${error.message}`
+      );
+    }
+
+    // Deploy Airdrop System (if not already deployed)
+    console.log("\n1.4 Deploying Airdrop System...");
     const registryFixture = await deployAirdropRegistryFixture();
     const { registry, merkleAirdropImplementation } = registryFixture;
     const registryAddress = await registry.getAddress();
@@ -340,8 +291,8 @@ async function main() {
       `  ✓ MerkleAirdrop implementation: ${await merkleAirdropImplementation.getAddress()}`
     );
 
-    // Deploy Mock ERC20 Token
-    console.log("\n1.7 Deploying Mock ERC20 Token...");
+    // Deploy Mock ERC20 Token (if not already deployed)
+    console.log("\n1.5 Deploying Mock ERC20 Token...");
     const mockToken = await deployMockERC20(
       "Dehive Token",
       "DHV",
@@ -351,14 +302,35 @@ async function main() {
     const tokenAddress = await mockToken.getAddress();
     console.log(`  ✓ Mock ERC20 deployed: ${tokenAddress}`);
 
-    // Set relayer (using owner as relayer for testing)
-    console.log("\n1.8 Setting up relayer...");
+    // Check if relayer is already set
+    console.log("\n1.6 Checking relayer configuration...");
     const messageViaProxy = MessageFactory.attach(proxyAddress) as Message;
-    const setRelayerTx = await messageViaProxy
-      .connect(owner)
-      .setRelayer(owner.address); // Using owner as relayer for testing
-    await setRelayerTx.wait();
-    console.log(`  ✓ Relayer set: ${owner.address}`);
+    try {
+      const currentRelayer = await messageViaProxy.relayer();
+      console.log(`  ✓ Relayer already set: ${currentRelayer}`);
+
+      // If relayer is not set or is zero address, set it
+      if (currentRelayer === ethers.ZeroAddress) {
+        console.log(`  ⚠️  Relayer not set, setting to owner...`);
+        const setRelayerTx = await messageViaProxy
+          .connect(owner)
+          .setRelayer(owner.address);
+        await setRelayerTx.wait();
+        console.log(`  ✓ Relayer set: ${owner.address}`);
+      }
+    } catch (error: any) {
+      console.log(`  ⚠️  Could not check relayer: ${error.message}`);
+      // Try to set relayer anyway
+      try {
+        const setRelayerTx = await messageViaProxy
+          .connect(owner)
+          .setRelayer(owner.address);
+        await setRelayerTx.wait();
+        console.log(`  ✓ Relayer set: ${owner.address}`);
+      } catch (setError: any) {
+        console.log(`  ⚠️  Could not set relayer: ${setError.message}`);
+      }
+    }
 
     deployedSystem = {
       proxy,
@@ -366,7 +338,7 @@ async function main() {
       messageFacet,
       messageFacetAddress,
       paymentHubFacet,
-      paymentHubFacetAddress,
+      paymentHubFacetAddress: paymentFacetAddress,
       registry,
       registryAddress,
       mockToken,
@@ -375,10 +347,12 @@ async function main() {
 
     testResults.deployment.success = true;
     testResults.deployment.contracts = 7;
-    console.log("\n✅ System deployment completed successfully!");
+    console.log("\n✅ Connected to existing system successfully!");
   } catch (error: any) {
-    testResults.deployment.errors.push(`Deployment failed: ${error.message}`);
-    console.error(`\n❌ Deployment failed: ${error.message}`);
+    testResults.deployment.errors.push(`Connection failed: ${error.message}`);
+    console.error(
+      `\n❌ Connection to existing system failed: ${error.message}`
+    );
     throw error;
   }
 
@@ -1020,8 +994,8 @@ async function main() {
   console.log("FINAL TEST SUMMARY");
   console.log("=".repeat(100));
 
-  console.log("\n📦 Deployment:");
-  console.log(`  ✓ Contracts deployed: ${testResults.deployment.contracts}`);
+  console.log("\n📦 System Connection:");
+  console.log(`  ✓ Contracts connected: ${testResults.deployment.contracts}`);
   console.log(`  ✓ Errors: ${testResults.deployment.errors.length}`);
 
   console.log("\n💬 Message System:");

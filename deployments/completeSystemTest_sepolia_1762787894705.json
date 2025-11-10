@@ -1,0 +1,64 @@
+{
+  "network": "sepolia",
+  "timestamp": "2025-11-10T15:18:14.705Z",
+  "wallets": {
+    "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+    "userA": "0x72c5AF22b30E55b529188c5Ce7490F7093FdCCE0",
+    "userB": "0x39c7043e1aA0AC0809085904b70860cA9BfD3136"
+  },
+  "deployment": {
+    "proxy": "0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8",
+    "messageFacet": "0xf31DBE9D0b6e321dAD4F386B96EB7753483989DF",
+    "paymentHubFacet": "0xD39285c2Fd74974965c759e292F4d40F011B20f5",
+    "registry": "0xdB89E4831b92e839263aBa654a56720b28def3D2",
+    "token": "0x212d7070bB148D70A9E10b7d60517C4e2baA1636"
+  },
+  "results": {
+    "deployment": {
+      "success": true,
+      "contracts": 7,
+      "errors": []
+    },
+    "messageSystem": {
+      "conversationsCreated": 1,
+      "messagesSent": 10,
+      "payAsYouGoMessages": 6,
+      "relayerMessages": 4,
+      "deposits": 2,
+      "errors": []
+    },
+    "paymentSystem": {
+      "nativePayments": 5,
+      "erc20Payments": 4,
+      "feesCollected": "500000000000000",
+      "feeWithdrawals": 0,
+      "errors": [
+        "ERC-20 payment failed: execution reverted"
+      ]
+    },
+    "airdropSystem": {
+      "serversCreated": 1,
+      "campaignsCreated": 1,
+      "claimsProcessed": 2,
+      "successfulClaims": 2,
+      "errors": []
+    },
+    "integration": {
+      "paymentInConversation": 10,
+      "airdropAfterPayment": 2,
+      "messageAfterAirdrop": 1,
+      "errors": []
+    },
+    "adminOperations": {
+      "feeUpdates": 2,
+      "withdrawals": 1,
+      "proxyWithdrawals": 0,
+      "errors": []
+    },
+    "edgeCases": {
+      "tested": 3,
+      "passed": 3,
+      "errors": []
+    }
+  }
+}

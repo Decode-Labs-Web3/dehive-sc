@@ -11,6 +11,11 @@ The `testCompleteSystemSepolia.ts` script tests the complete Dehive system on Se
    PRIVATE_KEY=<owner_private_key>      # Owner/deployer wallet
    PRIVATE_KEY_A=<user_a_private_key>  # Test user A
    PRIVATE_KEY_B=<user_b_private_key>  # Test user B
+
+   # Existing deployed contract addresses
+   PROXY_ADDRESS=0x...                 # Deployed proxy address
+   MESSAGE_FACET_ADDRESS=0x...         # Deployed message facet address
+   PAYMENT_FACET_ADDRESS=0x...        # Deployed payment hub facet address
    ```
 
 2. **Sepolia ETH**: Ensure all 3 wallets have sufficient Sepolia ETH:
@@ -28,6 +33,9 @@ The `testCompleteSystemSepolia.ts` script tests the complete Dehive system on Se
 PRIVATE_KEY=<owner_key> \
 PRIVATE_KEY_A=<user_a_key> \
 PRIVATE_KEY_B=<user_b_key> \
+PROXY_ADDRESS=<proxy_address> \
+MESSAGE_FACET_ADDRESS=<message_facet_address> \
+PAYMENT_FACET_ADDRESS=<payment_facet_address> \
 npx hardhat run scripts/testCompleteSystemSepolia.ts --network sepolia
 ```
 
@@ -39,6 +47,12 @@ Create a `.env` file in the project root:
 PRIVATE_KEY=0x...
 PRIVATE_KEY_A=0x...
 PRIVATE_KEY_B=0x...
+
+# Existing deployed contract addresses
+PROXY_ADDRESS=0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8
+MESSAGE_FACET_ADDRESS=0xf31DBE9D0b6e321dAD4F386B96EB7753483989DF
+PAYMENT_FACET_ADDRESS=0xD39285c2Fd74974965c759e292F4d40F011B20f5
+
 SEPOLIA_RPC_URL=https://eth-sepolia.public.blastapi.io
 ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
@@ -51,13 +65,13 @@ npx hardhat run scripts/testCompleteSystemSepolia.ts --network sepolia
 
 ## What the Script Tests
 
-### Phase 1: System Deployment
-- Deploys DehiveProxy
-- Deploys Message Facet
-- Deploys PaymentHub Facet
-- Deploys Airdrop Registry
-- Deploys Mock ERC20 Token
-- Installs all facets into the proxy
+### Phase 1: System Connection
+- Connects to existing DehiveProxy
+- Connects to existing Message Facet
+- Connects to existing PaymentHub Facet
+- Deploys Airdrop Registry (if needed)
+- Deploys Mock ERC20 Token (if needed)
+- Verifies all contracts are accessible
 
 ### Phase 2: Message System
 - Creates conversation between User A and User B
