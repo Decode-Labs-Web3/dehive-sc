@@ -1,0 +1,74 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "proxyAddress": "0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8",
+  "messageFacetAddress": "0xf31DBE9D0b6e321dAD4F386B96EB7753483989DF",
+  "paymentHubFacetAddress": "0xD39285c2Fd74974965c759e292F4d40F011B20f5",
+  "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "deployer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "messageSelectors": [
+    "0xdd91150b",
+    "0xf1b7fd5e",
+    "0xe2c41dbc",
+    "0xe2ae93fb",
+    "0xf8b1b13f",
+    "0x19ab453c",
+    "0x8da5cb5b",
+    "0x9b633201",
+    "0x8406c079",
+    "0x2fdeb111",
+    "0x2da17371",
+    "0xba89428e",
+    "0x3453b624",
+    "0x6548e9bc",
+    "0x83302a6f"
+  ],
+  "paymentHubSelectors": [
+    "0xfcf66664",
+    "0x3115b73b",
+    "0x19ab453c",
+    "0x8da5cb5b",
+    "0x860dc301",
+    "0x2dbbddf4",
+    "0x1a63a195",
+    "0x096a8ab7",
+    "0x0c8f5e00",
+    "0x164e68de"
+  ],
+  "verificationResults": {
+    "messageRead": true,
+    "messageWrite": true,
+    "paymentHubRead": true,
+    "paymentHubWrite": true,
+    "proxyWithdraw": true
+  },
+  "etherscanVerification": {
+    "proxy": true,
+    "messageFacet": true,
+    "paymentHubFacet": true
+  },
+  "deployedAt": 1762783925567,
+  "transactionHashes": {
+    "proxyDeployment": "0x5e2bd4657caf7f09b462f5a65fc471cb8eb65f2cc51711b6aa51e9bf34cebf44",
+    "messageFacetDeployment": "0x169fa4dc9df5220ac8042fbfbd2ea8398dd054cc2debc087b75d910848b6da84",
+    "messageFacetInstallation": "0x819c5af8aa91bd9c827e2d4c7844ba3f8a7730b75c01e40d11e6f2bd80e3fedc",
+    "paymentHubFacetDeployment": "0x8b1b41b83c6e7e4b885fdf58b89163748bf842f546e3290f51ee0a3ec68dce7f",
+    "paymentHubFacetInstallation": "0x59c9a78794df8bce82698c28dc1c78f4e1c8271f8031e4a99aa9056d3b921501",
+    "relayerSetup": "0x34faa142b95c96b7dfa52137a4f841d6e569cfbf5a188bb2b2c780810171b878",
+    "proxyWithdrawTest": "0xeaada0d0b6e57da3e83969ca95cc0c348465059537d762d75ac6c134dd2ecb39"
+  },
+  "blockNumbers": {
+    "proxyDeployment": 9600260,
+    "messageFacetDeployment": 9600261,
+    "messageFacetInstallation": 9600262,
+    "paymentHubFacetDeployment": 9600263,
+    "paymentHubFacetInstallation": 9600264,
+    "relayerSetup": 9600265,
+    "proxyWithdrawTest": 9600267
+  },
+  "paymentHubConflicts": [
+    "0x19ab453c",
+    "0x8da5cb5b"
+  ],
+  "relayer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE"
+}

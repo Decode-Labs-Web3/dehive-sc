@@ -1,0 +1,74 @@
+{
+  "network": "hardhat",
+  "chainId": "31337",
+  "proxyAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "messageFacetAddress": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  "paymentHubFacetAddress": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "messageSelectors": [
+    "0xdd91150b",
+    "0xf1b7fd5e",
+    "0xe2c41dbc",
+    "0xe2ae93fb",
+    "0xf8b1b13f",
+    "0x19ab453c",
+    "0x8da5cb5b",
+    "0x9b633201",
+    "0x8406c079",
+    "0x2fdeb111",
+    "0x2da17371",
+    "0xba89428e",
+    "0x3453b624",
+    "0x6548e9bc",
+    "0x83302a6f"
+  ],
+  "paymentHubSelectors": [
+    "0xfcf66664",
+    "0x3115b73b",
+    "0x19ab453c",
+    "0x8da5cb5b",
+    "0x860dc301",
+    "0x2dbbddf4",
+    "0x1a63a195",
+    "0x096a8ab7",
+    "0x0c8f5e00",
+    "0x164e68de"
+  ],
+  "verificationResults": {
+    "messageRead": true,
+    "messageWrite": true,
+    "paymentHubRead": true,
+    "paymentHubWrite": true,
+    "proxyWithdraw": true
+  },
+  "etherscanVerification": {
+    "proxy": false,
+    "messageFacet": false,
+    "paymentHubFacet": false
+  },
+  "deployedAt": 1762783837556,
+  "transactionHashes": {
+    "proxyDeployment": "0x65a129a53e29c3d99ba34c246ec4d265f57ce530f5626147eb0cd77026ece564",
+    "messageFacetDeployment": "0x6155b53d89e14514330c88b67a3373758cb3247d26efa26e17b7c86566e9671c",
+    "messageFacetInstallation": "0xd9622d4e6291593d9190254eac9aeacc63be3a9a710f19ac76827d9b73de82ee",
+    "paymentHubFacetDeployment": "0xef53e59b8ac9b71c26d03824b80f06e673969e81dd25e3afea9ae7db40c6e85b",
+    "paymentHubFacetInstallation": "0x11072e4cc67bc501e3e572a59c9cc8218e20565adb14a6970b002228e2f77464",
+    "relayerSetup": "0x0c984a27e6aacf1b59510e97a35c24ff0552d3bb9c94dbae7760a35ec7190a7a",
+    "proxyWithdrawTest": "0x7107bc389d058144faf0274e9ee2362881cbb488731316df218c36413a5c4c76"
+  },
+  "blockNumbers": {
+    "proxyDeployment": 1,
+    "messageFacetDeployment": 2,
+    "messageFacetInstallation": 3,
+    "paymentHubFacetDeployment": 4,
+    "paymentHubFacetInstallation": 5,
+    "relayerSetup": 6,
+    "proxyWithdrawTest": 8
+  },
+  "paymentHubConflicts": [
+    "0x19ab453c",
+    "0x8da5cb5b"
+  ],
+  "relayer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+}
