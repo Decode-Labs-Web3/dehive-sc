@@ -1,0 +1,55 @@
+{
+  "network": "sepolia",
+  "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+  "facetAddress": "0xe9278ad4cC74535287c1da991Eb0705D7c36a1d6",
+  "verifiedAt": "2025-11-09T00:54:52.076Z",
+  "results": [
+    {
+      "test": "Facet Installation",
+      "status": "PASS",
+      "message": "8 selectors installed",
+      "details": {
+        "selectors": [
+          "0xfcf66664",
+          "0x3115b73b",
+          "0x860dc301",
+          "0x2dbbddf4",
+          "0x1a63a195",
+          "0x096a8ab7",
+          "0x0c8f5e00",
+          "0x164e68de"
+        ]
+      }
+    },
+    {
+      "test": "Read: transactionFeePercent",
+      "status": "PASS",
+      "message": "Fee: 100 basis points"
+    },
+    {
+      "test": "Read: owner",
+      "status": "PASS",
+      "message": "Owner: 0x09e23052d4a07D38C85C35Af34c9e1d0555243EE"
+    },
+    {
+      "test": "Read: accumulatedFees",
+      "status": "PASS",
+      "message": "Native fees: 0.0 ETH"
+    },
+    {
+      "test": "Read: computeConversationId",
+      "status": "FAIL",
+      "message": "invalid address (argument=\"address\", value=\"0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb\", code=INVALID_ARGUMENT, version=6.15.0)"
+    },
+    {
+      "test": "Write: setTransactionFee",
+      "status": "PASS",
+      "message": "Fee set to 0 basis points"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6
+  }
+}

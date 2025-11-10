@@ -25,6 +25,8 @@ interface DeploymentInfo {
   deployer: string;
   transactionFeePercent: number;
   functionSelectors: string[];
+  alreadyInstalledSelectors?: string[];
+  newlyInstalledSelectors?: string[];
   deployedAt: number;
   transactionHashes: {
     facetDeployment: string;
@@ -56,10 +58,14 @@ async function main() {
 
   // Check balance
   const deployerBalance = await ethers.provider.getBalance(deployer.address);
-  console.log(`\n💰 Deployer Balance: ${ethers.formatEther(deployerBalance)} ETH`);
+  console.log(
+    `\n💰 Deployer Balance: ${ethers.formatEther(deployerBalance)} ETH`
+  );
 
   if (deployerBalance < ethers.parseEther("0.01")) {
-    console.warn("\n⚠️  WARNING: Deployer balance is low. Deployment may fail!");
+    console.warn(
+      "\n⚠️  WARNING: Deployer balance is low. Deployment may fail!"
+    );
   }
 
   // ========== STEP 1: LOAD PROXY ADDRESS ==========
@@ -70,11 +76,13 @@ async function main() {
   let proxyAddress: string;
 
   const deploymentsDir = path.join(__dirname, "../../deployments");
-  
+
   // Try environment variable first
   if (process.env.PROXY_ADDRESS) {
     proxyAddress = process.env.PROXY_ADDRESS;
-    console.log(`✓ Using proxy address from PROXY_ADDRESS env var: ${proxyAddress}`);
+    console.log(
+      `✓ Using proxy address from PROXY_ADDRESS env var: ${proxyAddress}`
+    );
   } else {
     // Try to load from deployment file
     const proxyFile = path.join(
@@ -85,7 +93,9 @@ async function main() {
     if (fs.existsSync(proxyFile)) {
       const proxyDeployment = JSON.parse(fs.readFileSync(proxyFile, "utf-8"));
       proxyAddress = proxyDeployment.proxyAddress;
-      console.log(`✓ Loaded proxy address from deployment file: ${proxyAddress}`);
+      console.log(
+        `✓ Loaded proxy address from deployment file: ${proxyAddress}`
+      );
     } else {
       throw new Error(
         `Proxy address not found. Please set PROXY_ADDRESS env var or ensure deployment file exists at: ${proxyFile}`
@@ -102,7 +112,9 @@ async function main() {
   console.log(`✓ Proxy owner: ${proxyOwner}`);
 
   if (proxyOwner.toLowerCase() !== owner.address.toLowerCase()) {
-    console.warn(`\n⚠️  WARNING: Deployer (${owner.address}) is not proxy owner (${proxyOwner})`);
+    console.warn(
+      `\n⚠️  WARNING: Deployer (${owner.address}) is not proxy owner (${proxyOwner})`
+    );
     console.warn(`   Facet installation may fail!`);
   }
 
@@ -127,9 +139,9 @@ async function main() {
     `✓ Block number: ${facetDeployReceipt?.blockNumber || facetBlockNumber}`
   );
 
-  // ========== STEP 3: INSTALL FACET ==========
+  // ========== STEP 3: CHECK EXISTING SELECTORS ==========
   console.log("\n" + "=".repeat(80));
-  console.log("Step 3: Installing PaymentHub Facet into DehiveProxy");
+  console.log("Step 3: Checking Existing Function Selectors");
   console.log("=".repeat(80));
 
   // Get IPaymentHub ABI for function selectors
@@ -141,12 +153,85 @@ async function main() {
     fs.readFileSync(ipaymenthubArtifactPath, "utf-8")
   ).abi;
 
-  const functionSelectors = getFunctionSelectors(ipaymenthubAbi);
-  console.log(`✓ Found ${functionSelectors.length} function selectors`);
+  const allFunctionSelectors = getFunctionSelectors(ipaymenthubAbi);
+  console.log(
+    `✓ Found ${allFunctionSelectors.length} PaymentHub function selectors`
+  );
+
+  // Check which selectors are already installed
+  const installedFacets = await proxy.facetAddresses();
+  const selectorToFacet: Map<string, string> = new Map();
+
+  for (const facetAddr of installedFacets) {
+    const selectors = await proxy.facetFunctionSelectors(facetAddr);
+    for (const selector of selectors) {
+      selectorToFacet.set(selector.toLowerCase(), facetAddr);
+    }
+  }
+
+  // Filter out already installed selectors
+  const availableSelectors: string[] = [];
+  const alreadyInstalledSelectors: string[] = [];
+
+  for (const selector of allFunctionSelectors) {
+    const selectorLower = selector.toLowerCase();
+    if (selectorToFacet.has(selectorLower)) {
+      alreadyInstalledSelectors.push(selector);
+      const existingFacet = selectorToFacet.get(selectorLower);
+      console.log(
+        `⚠️  Selector ${selector} already installed in facet: ${existingFacet}`
+      );
+    } else {
+      availableSelectors.push(selector);
+    }
+  }
+
+  console.log(`\n📊 Selector Status:`);
+  console.log(`  ✅ Available to install: ${availableSelectors.length}`);
+  console.log(`  ⚠️  Already installed: ${alreadyInstalledSelectors.length}`);
+
+  if (availableSelectors.length === 0) {
+    console.log(
+      `\n⚠️  Warning: All PaymentHub selectors are already installed!`
+    );
+    console.log(`   PaymentHub facet may already be installed.`);
+    console.log(`   Skipping installation...`);
+
+    // Still verify the facet is accessible
+    const paymentHubViaProxy = PaymentHubFactory.attach(
+      proxyAddress
+    ) as PaymentHub;
+    try {
+      const fee = await paymentHubViaProxy.transactionFeePercent();
+      console.log(`\n✓ PaymentHub is accessible through proxy`);
+      console.log(`  Transaction fee: ${fee} basis points`);
+      console.log(`\n✅ PaymentHub facet is already installed and working!`);
+      return;
+    } catch (error) {
+      console.log(`\n❌ PaymentHub is not accessible through proxy`);
+      throw new Error(
+        "All selectors are installed but PaymentHub is not accessible. Check facet installation."
+      );
+    }
+  }
+
+  if (alreadyInstalledSelectors.length > 0) {
+    console.log(
+      `\n⚠️  Warning: ${alreadyInstalledSelectors.length} selector(s) are already installed.`
+    );
+    console.log(
+      `   Will install only the ${availableSelectors.length} available selectors.`
+    );
+  }
+
+  // ========== STEP 4: INSTALL FACET ==========
+  console.log("\n" + "=".repeat(80));
+  console.log("Step 4: Installing PaymentHub Facet into DehiveProxy");
+  console.log("=".repeat(80));
 
   const facetCut = {
     facetAddress: facetAddress,
-    functionSelectors: functionSelectors,
+    functionSelectors: availableSelectors, // Only install available selectors
     action: 0, // Add
   };
 
@@ -175,17 +260,22 @@ async function main() {
   console.log(`✓ Block number: ${installBlockNumber}`);
 
   // Connect to proxy as PaymentHub interface
-  const paymentHubViaProxy = PaymentHubFactory.attach(proxyAddress) as PaymentHub;
+  const paymentHubViaProxy = PaymentHubFactory.attach(
+    proxyAddress
+  ) as PaymentHub;
 
-  // ========== STEP 4: VERIFY DEPLOYMENT ==========
+  // ========== STEP 5: VERIFY DEPLOYMENT ==========
   console.log("\n" + "=".repeat(80));
-  console.log("Step 4: Verifying Deployment");
+  console.log("Step 5: Verifying Deployment");
   console.log("=".repeat(80));
 
   // Verify fee
-  const transactionFeePercent = await paymentHubViaProxy.transactionFeePercent();
+  const transactionFeePercent =
+    await paymentHubViaProxy.transactionFeePercent();
   console.log(
-    `✓ Transaction Fee: ${transactionFeePercent} basis points (${Number(transactionFeePercent) / 100}%)`
+    `✓ Transaction Fee: ${transactionFeePercent} basis points (${
+      Number(transactionFeePercent) / 100
+    }%)`
   );
 
   // Verify facet installation
@@ -194,9 +284,21 @@ async function main() {
     `✓ Facet has ${installedSelectors.length} function selectors installed`
   );
 
-  // ========== STEP 5: SAVE DEPLOYMENT INFO ==========
+  // Show which selectors were installed
+  if (alreadyInstalledSelectors.length > 0) {
+    console.log(
+      `\n📝 Note: ${alreadyInstalledSelectors.length} selector(s) were already installed and skipped.`
+    );
+    console.log(
+      `   Total PaymentHub selectors: ${allFunctionSelectors.length}`
+    );
+    console.log(`   Newly installed: ${availableSelectors.length}`);
+    console.log(`   Previously installed: ${alreadyInstalledSelectors.length}`);
+  }
+
+  // ========== STEP 6: SAVE DEPLOYMENT INFO ==========
   console.log("\n" + "=".repeat(80));
-  console.log("Step 5: Saving Deployment Information");
+  console.log("Step 6: Saving Deployment Information");
   console.log("=".repeat(80));
 
   const deploymentInfo: DeploymentInfo = {
@@ -206,7 +308,12 @@ async function main() {
     owner: proxyOwner,
     deployer: deployer.address,
     transactionFeePercent: Number(transactionFeePercent),
-    functionSelectors: functionSelectors,
+    functionSelectors: allFunctionSelectors, // All selectors (including already installed)
+    alreadyInstalledSelectors:
+      alreadyInstalledSelectors.length > 0
+        ? alreadyInstalledSelectors
+        : undefined,
+    newlyInstalledSelectors: availableSelectors,
     deployedAt: Date.now(),
     transactionHashes: {
       facetDeployment: facetDeployReceipt?.hash || "",
@@ -245,17 +352,29 @@ async function main() {
   console.log(`\n💰 Fees:`);
   console.log(`  Transaction Fee: ${transactionFeePercent} basis points`);
   console.log(`\n🔧 Configuration:`);
-  console.log(`  Function Selectors: ${functionSelectors.length}`);
+  console.log(`  Total Function Selectors: ${allFunctionSelectors.length}`);
+  if (alreadyInstalledSelectors.length > 0) {
+    console.log(`  Newly Installed: ${availableSelectors.length}`);
+    console.log(`  Already Installed: ${alreadyInstalledSelectors.length}`);
+  } else {
+    console.log(`  Function Selectors: ${allFunctionSelectors.length}`);
+  }
   console.log(`\n📄 Transactions:`);
-  console.log(`  Facet Deployment: ${deploymentInfo.transactionHashes.facetDeployment}`);
-  console.log(`  Facet Installation: ${deploymentInfo.transactionHashes.facetInstallation}`);
+  console.log(
+    `  Facet Deployment: ${deploymentInfo.transactionHashes.facetDeployment}`
+  );
+  console.log(
+    `  Facet Installation: ${deploymentInfo.transactionHashes.facetInstallation}`
+  );
   console.log("\n" + "=".repeat(80));
   console.log("✅ Deployment Completed Successfully!");
   console.log("=".repeat(80));
 
   console.log("\n📝 Next Steps:");
   console.log("1. Verify contracts on Etherscan:");
-  console.log(`   npx hardhat verify --network ${networkName} ${facetAddress} ${deployer.address}`);
+  console.log(
+    `   npx hardhat verify --network ${networkName} ${facetAddress} ${deployer.address}`
+  );
   console.log("2. Set transaction fee (optional):");
   console.log(`   paymentHubViaProxy.setTransactionFee(100); // 1%`);
   console.log("3. Start using PaymentHub through proxy address:");
@@ -269,4 +388,3 @@ main()
     console.error(error);
     process.exit(1);
   });
-

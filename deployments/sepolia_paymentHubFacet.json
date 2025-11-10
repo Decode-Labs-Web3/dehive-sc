@@ -1,0 +1,43 @@
+{
+  "network": "sepolia",
+  "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+  "facetAddress": "0xe9278ad4cC74535287c1da991Eb0705D7c36a1d6",
+  "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "deployer": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "transactionFeePercent": 0,
+  "functionSelectors": [
+    "0xfcf66664",
+    "0x3115b73b",
+    "0x19ab453c",
+    "0x8da5cb5b",
+    "0x860dc301",
+    "0x2dbbddf4",
+    "0x1a63a195",
+    "0x096a8ab7",
+    "0x0c8f5e00",
+    "0x164e68de"
+  ],
+  "alreadyInstalledSelectors": [
+    "0x19ab453c",
+    "0x8da5cb5b"
+  ],
+  "newlyInstalledSelectors": [
+    "0xfcf66664",
+    "0x3115b73b",
+    "0x860dc301",
+    "0x2dbbddf4",
+    "0x1a63a195",
+    "0x096a8ab7",
+    "0x0c8f5e00",
+    "0x164e68de"
+  ],
+  "deployedAt": 1762649516635,
+  "transactionHashes": {
+    "facetDeployment": "0xac6c79cc104cc518c0089ca8a2c8175a515b835454c8d2b8829fbc6302dc4b70",
+    "facetInstallation": "0x39ec1c80faa641d6de43b64d1b7619a3705165e4e08fc54341362288e096901b"
+  },
+  "blockNumbers": {
+    "facetDeployment": 9589623,
+    "facetInstallation": 9589624
+  }
+}

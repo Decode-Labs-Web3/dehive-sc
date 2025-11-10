@@ -1,0 +1,87 @@
+{
+  "network": "sepolia",
+  "proxyAddress": "0x41BC86bA44813b2B106E1942CB68cc471714df2D",
+  "checkedAt": "2025-11-09T00:51:19.761Z",
+  "installedFacets": [
+    "0xEd0E195310A1419c309935DCe97fCA507d82DE11"
+  ],
+  "paymentHubSelectors": {
+    "total": 10,
+    "available": [
+      "0xfcf66664",
+      "0x3115b73b",
+      "0x860dc301",
+      "0x2dbbddf4",
+      "0x1a63a195",
+      "0x096a8ab7",
+      "0x0c8f5e00",
+      "0x164e68de"
+    ],
+    "alreadyInstalled": [
+      {
+        "selector": "0x19ab453c",
+        "functionName": "init",
+        "currentFacet": "0xEd0E195310A1419c309935DCe97fCA507d82DE11"
+      },
+      {
+        "selector": "0x8da5cb5b",
+        "functionName": "owner",
+        "currentFacet": "0xEd0E195310A1419c309935DCe97fCA507d82DE11"
+      }
+    ]
+  },
+  "selectorInfo": [
+    {
+      "selector": "0xfcf66664",
+      "functionName": "accumulatedFees",
+      "status": "available"
+    },
+    {
+      "selector": "0x3115b73b",
+      "functionName": "computeConversationId",
+      "status": "available"
+    },
+    {
+      "selector": "0x19ab453c",
+      "functionName": "init",
+      "currentFacet": "0xEd0E195310A1419c309935DCe97fCA507d82DE11",
+      "status": "already_installed"
+    },
+    {
+      "selector": "0x8da5cb5b",
+      "functionName": "owner",
+      "currentFacet": "0xEd0E195310A1419c309935DCe97fCA507d82DE11",
+      "status": "already_installed"
+    },
+    {
+      "selector": "0x860dc301",
+      "functionName": "sendERC20",
+      "status": "available"
+    },
+    {
+      "selector": "0x2dbbddf4",
+      "functionName": "sendERC20WithPermit",
+      "status": "available"
+    },
+    {
+      "selector": "0x1a63a195",
+      "functionName": "sendNative",
+      "status": "available"
+    },
+    {
+      "selector": "0x096a8ab7",
+      "functionName": "setTransactionFee",
+      "status": "available"
+    },
+    {
+      "selector": "0x0c8f5e00",
+      "functionName": "transactionFeePercent",
+      "status": "available"
+    },
+    {
+      "selector": "0x164e68de",
+      "functionName": "withdrawFees",
+      "status": "available"
+    }
+  ]
+}

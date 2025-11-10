@@ -448,6 +448,33 @@ contract DehiveProxy is IDehiveProxy {
         _owner = newOwner;
     }
 
+    /**
+     * @dev Withdraw funds from the proxy contract
+     * @param amount Amount to withdraw in wei
+     * @param reason Reason for withdrawal (emitted in event)
+     *
+     * @dev Only the proxy owner can withdraw funds
+     *      This allows the owner to recover any ETH sent directly to the proxy
+     *      The reason is emitted in an event for transparency
+     *
+     * @custom:example
+     * ```solidity
+     * // Owner withdraws 1 ETH with reason
+     * proxy.withdrawFunds(1 ether, "Emergency withdrawal for maintenance");
+     * ```
+     */
+    function withdrawFunds(uint256 amount, string calldata reason) external onlyOwner {
+        require(amount > 0, "Amount must be greater than 0");
+        require(address(this).balance >= amount, "Insufficient balance");
+
+        // Transfer funds to owner
+        (bool sent, ) = payable(_owner).call{value: amount}("");
+        require(sent, "Failed to send funds");
+
+        // Emit event with reason
+        emit FundsWithdrawn(_owner, amount, reason, block.timestamp);
+    }
+
     // ========== FALLBACK ==========
 
     /**

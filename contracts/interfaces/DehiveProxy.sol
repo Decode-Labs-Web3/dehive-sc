@@ -245,4 +245,48 @@ interface IDehiveProxy {
    * - New owner immediately gains facet management rights
    */
   function transferOwnership(address newOwner) external;
+
+  // ========== FUNDS MANAGEMENT ==========
+
+  /**
+   * @dev Event emitted when funds are withdrawn from the proxy
+   * @param owner Address of the owner withdrawing funds
+   * @param amount Amount withdrawn in wei
+   * @param reason Reason for withdrawal
+   * @param timestamp Block timestamp of the withdrawal
+   *
+   * PURPOSE:
+   * - Provides transparency for fund withdrawals
+   * - Allows off-chain systems to track proxy fund movements
+   * - Essential for auditing and monitoring
+   */
+  event FundsWithdrawn(address indexed owner, uint256 amount, string reason, uint256 timestamp);
+
+  /**
+   * @dev Withdraw funds from the proxy contract
+   * @param amount Amount to withdraw in wei
+   * @param reason Reason for withdrawal (emitted in event)
+   *
+   * REQUIREMENTS:
+   * - Only proxy owner can call this function
+   * - amount must be greater than 0
+   * - Proxy must have sufficient balance
+   *
+   * PURPOSE:
+   * - Allows owner to recover any ETH sent directly to the proxy
+   * - Provides transparency through event emission with reason
+   * - Useful for emergency withdrawals or maintenance
+   *
+   * SECURITY:
+   * - Only owner can withdraw funds
+   * - Prevents accidental withdrawals with zero amount
+   * - Ensures sufficient balance before withdrawal
+   *
+   * @custom:example
+   * ```solidity
+   * // Owner withdraws 1 ETH with reason
+   * proxy.withdrawFunds(1 ether, "Emergency withdrawal for maintenance");
+   * ```
+   */
+  function withdrawFunds(uint256 amount, string calldata reason) external;
 }

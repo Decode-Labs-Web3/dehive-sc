@@ -1,0 +1,66 @@
+{
+  "network": "hardhat",
+  "timestamp": "2025-11-10T14:03:19.521Z",
+  "deployment": {
+    "proxy": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "messageFacet": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "paymentHubFacet": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "registry": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+    "token": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
+  },
+  "results": {
+    "deployment": {
+      "success": true,
+      "contracts": 7,
+      "errors": []
+    },
+    "messageSystem": {
+      "conversationsCreated": 8,
+      "messagesSent": 50,
+      "payAsYouGoMessages": 39,
+      "relayerMessages": 11,
+      "deposits": 10,
+      "errors": []
+    },
+    "paymentSystem": {
+      "nativePayments": 20,
+      "erc20Payments": 14,
+      "feesCollected": "20000000000000000",
+      "feeWithdrawals": 0,
+      "errors": []
+    },
+    "airdropSystem": {
+      "serversCreated": 5,
+      "campaignsCreated": 3,
+      "claimsProcessed": 15,
+      "successfulClaims": 15,
+      "errors": []
+    },
+    "integration": {
+      "paymentInConversation": 35,
+      "airdropAfterPayment": 15,
+      "messageAfterAirdrop": 1,
+      "errors": []
+    },
+    "adminOperations": {
+      "feeUpdates": 1,
+      "withdrawals": 0,
+      "proxyWithdrawals": 0,
+      "errors": [
+        "Fee withdrawal failed: VM Exception while processing transaction: reverted with reason string 'PaymentHub: caller is not the owner'",
+        "Proxy withdraw failed: VM Exception while processing transaction: reverted with reason string 'Only owner can call this function'",
+        "Fee update failed: VM Exception while processing transaction: reverted with reason string 'Message: caller is not the owner'"
+      ]
+    },
+    "loadTests": {
+      "totalOperations": 100,
+      "successRate": 100,
+      "errors": []
+    },
+    "edgeCases": {
+      "tested": 3,
+      "passed": 3,
+      "errors": []
+    }
+  }
+}

@@ -125,7 +125,13 @@ contract PaymentHub is IPaymentHub, ReentrancyGuard {
         // In facet mode, address(this) will be the proxy address
         try IDehiveProxy(address(this)).owner() returns (address proxyOwner) {
             // We're in facet mode - use proxy owner
-            return proxyOwner;
+            // But validate it's not a zero or invalid address
+            // If proxy owner is invalid, fall back to stored owner
+            if (proxyOwner != address(0) && proxyOwner != address(0x1)) {
+                return proxyOwner;
+            }
+            // Invalid proxy owner, use stored owner
+            return ds.owner;
         } catch {
             // We're in standalone mode - use stored owner
             return ds.owner;
