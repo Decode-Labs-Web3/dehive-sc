@@ -1,0 +1,12 @@
+{
+  "network": "sepolia",
+  "chainId": "11155111",
+  "proxyAddress": "0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8",
+  "newRelayerAddress": "0xa6911D2f9e2f9bE993FD71768eE05876390948e9",
+  "previousRelayer": "0xa6911D2f9e2f9bE993FD71768eE05876390948e9",
+  "owner": "0x09e23052d4a07D38C85C35Af34c9e1d0555243EE",
+  "transactionHash": "0x4100fddc0960c3af484173a09d14dc63ad31fb18a7966579a65256c1e7fac186",
+  "blockNumber": 9691153,
+  "gasUsed": "38495",
+  "timestamp": "2025-11-23T17:14:26.741Z"
+}

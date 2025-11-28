@@ -1,301 +1,410 @@
-# 🏭 Airdrop Builder Smart Contracts
+# DeHive Smart Contracts
 
-### Decentralized Merkle Airdrop System
-*(Solidity 0.8.28 + OpenZeppelin + EIP-1167 Minimal Proxies)*
+### Decentralized Messaging, Payments, and Airdrop System
+*(Solidity 0.8.28 + OpenZeppelin + Diamond Pattern + EIP-1167 Minimal Proxies)*
 
 ---
 
-## 🧠 Overview
+## Overview
 
-The **Airdrop Builder Smart Contracts** implement a gas-efficient, secure, and decentralized airdrop system using Merkle trees and EIP-1167 minimal proxy patterns. The system enables anyone to create airdrops with automatic funding and time-locked withdrawals for security.
+The **DeHive Smart Contracts** implement a comprehensive decentralized platform featuring end-to-end encrypted messaging, peer-to-peer payments, and gas-efficient airdrop distribution. The system uses advanced patterns including the Diamond proxy pattern for modularity and EIP-1167 minimal proxies for gas optimization.
 
 ### Key Features
 
-- **🌳 Merkle Tree Verification** - Efficient on-chain eligibility checks
-- **⚡ Gas Optimization** - EIP-1167 minimal proxy pattern for low deployment costs
-- **🔒 Security First** - 7-day withdrawal lock prevents rug pulls
-- **📦 IPFS Integration** - Decentralized metadata storage
-- **🎯 Batch Operations** - Deploy and fund airdrops in single transaction
-- **🛡️ Battle-Tested** - Built with OpenZeppelin libraries
+**Messaging System:**
+- 🔐 **End-to-End Encryption** - Per-conversation encryption keys with per-user encryption
+- 💰 **Two-Tier Fee System** - Pay-as-you-go or credit-based relayer system
+- 🔑 **Deterministic Conversation IDs** - Consistent conversation addressing
+- 📝 **On-Chain Message Storage** - Immutable message records
+
+**Payment System:**
+- 💸 **Multi-Token Support** - Native tokens (ETH) and ERC-20 tokens
+- 🔓 **Gasless Approvals** - EIP-2612 permit support
+- 💼 **Non-Custodial** - Direct peer-to-peer transfers
+- 📊 **Fee Management** - Configurable transaction fees
+
+**Airdrop System:**
+- 🌳 **Merkle Tree Verification** - Efficient on-chain eligibility checks
+- ⚡ **Gas Optimization** - EIP-1167 minimal proxy pattern (~95% gas savings)
+- 🔒 **Security First** - 7-day withdrawal lock prevents rug pulls
+- 📦 **IPFS Integration** - Decentralized metadata storage
+
+**Infrastructure:**
+- 💎 **Diamond Pattern** - Modular, upgradeable proxy system
+- 🔄 **Dual-Mode Operation** - Standalone or facet mode
+- 🛡️ **Battle-Tested** - Built with OpenZeppelin libraries
 
 ---
 
-## 🏗️ System Architecture & Workflow
+## System Architecture
 
-### Complete Airdrop Flow
+### High-Level Architecture
 
-The following diagrams illustrate the complete airdrop system architecture and workflow:
+The DeHive system consists of several interconnected modules:
 
-#### 1. System Overview
-![System Workflow](./assets/system_workflow.png)
-
-The **System Workflow** shows the high-level architecture where:
-- **AirdropFactory** deploys clone proxies using OpenZeppelin's Clones library
-- **Participants** interact with clone proxies to claim tokens with Merkle proofs
-- **Clone Proxies** delegate calls to the shared **MerkleAirdrop** implementation
-- **ERC20 Token Contract** provides the tokens for distribution
-
-#### 2. Factory & Participants Flow
-![Airdrop Factory and Participants](./assets/airdrop_factory_and_participants.png)
-
-**Left Column - AirdropFactory Process:**
-1. **`createAirdropAndFund(token, merkleRoot, metadataURI, totalAmount)`** - Factory function call
-2. **Uses OpenZeppelin Clones.clone()** - Deploys minimal proxy
-3. **Deploys minimal proxy (clone)** - Gas-efficient deployment
-4. **Initializes new MerkleAirdrop instance** - Sets up airdrop parameters
-5. **Transfers totalAmount of ERC20 tokens** - Funds the airdrop
-
-**Right Column - Participants Process:**
-1. **User with valid Merkle proof** - Eligible participant
-2. **Front-end fetches proof + index from IPFS metadata** - Retrieves claim data
-3. **User calls claim(index, account, amount, merkleProof)** - Submits claim
-4. **Contract verifies leaf via MerkleProof.verify()** - Validates eligibility
-5. **Bitmap updated → tokens transferred** - Prevents double claims and transfers tokens
-
-#### 3. Clone Proxies Architecture
-![Clone Proxies](./assets/clone_proxies.png)
-
-**Clone Proxies Pattern:**
-- **Multiple Proxy Instances** (P1, P2, P3) - Each represents a separate airdrop
-- **Delegate Calls to MerkleAirdrop** - All proxies use shared implementation
-- **Independent State** - Each clone maintains its own:
-  - `merkleRoot` - Unique to each airdrop
-  - `balances` - Token balances for each airdrop
-  - `claimedBitMap` - Claim status for each airdrop
-
-#### 4. MerkleAirdrop & ERC20 Integration
-![MerkleAirdrop and ERC20 Token](./assets/merkle_airdrop_and_erc20_token.png)
-
-**MerkleAirdrop Contract:**
-- **Stores core logic only (no state)** - Stateless implementation
-- **Functions: claim(), withdrawRemaining(), isClaimed()** - Core functionality
-- **Uses MerkleProof.verify()** - Cryptographic verification
-- **Tracks claims via bitmap (256 bits per slot)** - Efficient storage
-- **7-day lock for withdrawal** - Security mechanism
-
-**ERC20 Token Contract:**
-- **Token used for airdrop rewards** - The distributed asset
-- **Factory or owner funds clone airdrop** - Initial funding
-- **Clone transfers tokens to users on claim** - Token distribution
-
-### Key Benefits of This Architecture
-
-1. **Gas Efficiency** - EIP-1167 minimal proxies reduce deployment costs by ~95%
-2. **Scalability** - Unlimited airdrops with shared implementation
-3. **Security** - Merkle proofs prevent unauthorized claims
-4. **Decentralization** - No central authority required
-5. **Transparency** - All operations are on-chain and verifiable
-
-### Detailed Technical Flow
-
-#### Phase 1: Airdrop Creation
-```mermaid
-sequenceDiagram
-    participant Creator
-    participant Factory
-    participant Clone
-    participant Token
-    participant IPFS
-
-    Creator->>IPFS: Upload CSV → Generate Merkle Tree
-    IPFS-->>Creator: Return metadataURI + merkleRoot
-    Creator->>Token: Approve Factory to spend tokens
-    Creator->>Factory: createAirdropAndFund(token, merkleRoot, metadataURI, totalAmount)
-    Factory->>Clone: Deploy minimal proxy
-    Factory->>Clone: Initialize with parameters
-    Factory->>Token: Transfer tokens to clone
-    Factory-->>Creator: Return airdrop address
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DehiveProxy (Diamond)                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   Message    │  │ PaymentHub   │  │  (Future)    │      │
+│  │    Facet     │  │    Facet     │  │   Facets     │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │
+        ┌───────────────────┴───────────────────┐
+        │                                         │
+┌───────────────────┐              ┌──────────────────────────┐
+│  Airdrop System   │              │   Server Airdrop Registry │
+│                   │              │                           │
+│  ┌─────────────┐  │              │  ┌─────────────────────┐ │
+│  │   Factory   │  │              │  │  Factory Clones     │ │
+│  └──────┬──────┘  │              │  │  (per server)       │ │
+│         │         │              │  └─────────────────────┘ │
+│  ┌──────▼──────┐  │              └──────────────────────────┘
+│  │   Merkle    │  │
+│  │  Airdrop    │  │
+│  │  Clones     │  │
+│  └─────────────┘  │
+└───────────────────┘
 ```
 
-#### Phase 2: Token Claiming
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend
-    participant Clone
-    participant Token
-    participant IPFS
+### Diamond Proxy Pattern
 
-    User->>Frontend: Connect wallet
-    Frontend->>IPFS: Fetch claims.json using metadataURI
-    IPFS-->>Frontend: Return user's claim data (index, amount, proof)
-    Frontend->>Clone: claim(index, account, amount, merkleProof)
-    Clone->>Clone: Verify Merkle proof
-    Clone->>Clone: Check if already claimed
-    Clone->>Clone: Update claimed bitmap
-    Clone->>Token: Transfer tokens to user
-    Clone-->>User: Emit Claimed event
-```
+The **DehiveProxy** implements the Diamond pattern (EIP-2535), allowing multiple facets to be installed in a single proxy contract:
 
-#### Phase 3: Withdrawal (After 7 Days)
-```mermaid
-sequenceDiagram
-    participant Creator
-    participant Clone
-    participant Token
+**Benefits:**
+- **Modularity**: Each feature (Message, PaymentHub) is a separate facet
+- **Upgradeability**: Individual facets can be upgraded without affecting others
+- **Size Limits**: Bypasses Ethereum's 24KB contract size limit
+- **Gas Efficiency**: Only deploy what you need, when you need it
 
-    Creator->>Clone: withdrawRemaining()
-    Clone->>Clone: Check if 7 days passed
-    Clone->>Clone: Get remaining balance
-    Clone->>Token: Transfer remaining tokens to creator
-    Clone-->>Creator: Emit Withdrawn event
-```
+**How It Works:**
+1. Proxy stores a mapping: `functionSelector => facetAddress`
+2. When a function is called, proxy looks up which facet handles it
+3. Proxy delegates the call to the appropriate facet using `delegatecall`
+4. Facet executes the function using the proxy's storage
 
-### Security Mechanisms
+### Dual-Mode Operation
 
-1. **Merkle Proof Verification**
-   - Each claim requires a valid Merkle proof
-   - Prevents unauthorized token claims
-   - Efficient on-chain verification
+Contracts support two deployment modes:
 
-2. **Double-Claim Prevention**
-   - Bitmap tracks claimed status (1 bit per claim)
-   - Gas-efficient storage pattern
-   - Immutable claim records
+**Standalone Mode:**
+- Deployed as regular contracts
+- Uses constructor for initialization
+- Has its own owner storage
 
-3. **Time-Locked Withdrawals**
-   - 7-day lock prevents immediate rug pulls
-   - Creator cannot withdraw before lock expires
-   - Transparent withdrawal timeline
-
-4. **Access Control**
-   - Only airdrop owner can withdraw remaining tokens
-   - Only eligible users can claim tokens
-   - No central authority required
+**Facet Mode:**
+- Installed in DehiveProxy
+- Uses `init()` function for initialization
+- Uses proxy owner via `IDehiveProxy` interface
 
 ---
 
-## 🏗️ Contract Architecture
+## Core Contracts
 
-### Core Contracts
+### 1. Message Contract
 
-**MerkleAirdrop.sol** - Individual airdrop logic
-- Merkle proof verification
-- Claim tracking via bitmap
-- Time-locked withdrawal system
-- Event emission for indexing
+**Purpose:** End-to-end encrypted messaging with two-tier fee system
 
-**AirdropFactory.sol** - Factory for deploying airdrops
-- EIP-1167 clone deployment
+**Key Features:**
+- Deterministic conversation IDs: `keccak256(abi.encodePacked(smallerAddress, largerAddress))`
+- Per-conversation encryption keys encrypted per-user
+- Two payment models:
+  - **Pay-as-you-go**: Direct message sending with higher fees
+  - **Credit-based**: Deposit funds, relayer sends with lower fees
+- On-chain message storage with encrypted content
+
+**Core Functions:**
+```solidity
+// Create a new conversation
+function createConversation(
+    address to,
+    bytes encryptedConversationKeyForSender,
+    bytes encryptedConversationKeyForReceiver
+) external returns (uint256 conversationId);
+
+// Send a message (pay-as-you-go)
+function sendMessage(
+    uint256 conversationId,
+    address to,
+    string encryptedMessage
+) external payable returns (bool);
+
+// Send message via relayer (credit-based)
+function sendMessageViaRelayer(
+    uint256 conversationId,
+    address from,
+    address to,
+    string encryptedMessage,
+    uint256 feeAmount
+) external returns (bool);
+
+// Deposit funds for relayer usage
+function depositFunds() external payable;
+```
+
+**View Functions:**
+```solidity
+function conversations(uint256 conversationId) external view returns (
+    address smallerAddress,
+    address largerAddress,
+    bytes encryptedConversationKeyForSmallerAddress,
+    bytes encryptedConversationKeyForLargerAddress,
+    uint256 createdAt
+);
+
+function getMyEncryptedConversationKeys(uint256 conversationId)
+    external view returns (bytes encryptedConversationKeyForMe);
+
+function funds(address user) external view returns (uint256);
+```
+
+**Events:**
+- `ConversationCreated` - New conversation established
+- `MessageSent` - Message sent in conversation
+- `FundsDeposited` - User deposited credits
+- `FeeCharged` - Fee deducted from user balance
+- `RelayerSet` - Relayer address updated
+- `PayAsYouGoFeeSet` - Pay-as-you-go fee updated
+- `RelayerFeeSet` - Relayer fee updated
+
+### 2. PaymentHub Contract
+
+**Purpose:** Peer-to-peer payments with native and ERC-20 token support
+
+**Key Features:**
+- Native token (ETH) payments
+- ERC-20 token payments with standard approval
+- EIP-2612 permit support for gasless approvals
+- Configurable transaction fees (0-10%)
+- Non-custodial direct transfers
+- IPFS metadata linking
+
+**Core Functions:**
+```solidity
+// Send native tokens
+function sendNative(
+    uint256 conversationId,
+    address recipient,
+    string ipfsCid,
+    bytes32 contentHash,
+    uint8 mode,
+    string clientMsgId
+) external payable returns (bool);
+
+// Send ERC-20 tokens
+function sendERC20(
+    uint256 conversationId,
+    address recipient,
+    address token,
+    uint256 amount,
+    string ipfsCid,
+    bytes32 contentHash,
+    uint8 mode,
+    string clientMsgId
+) external returns (bool);
+
+// Send ERC-20 with permit (gasless approval)
+function sendERC20WithPermit(
+    uint256 conversationId,
+    address recipient,
+    address token,
+    uint256 amount,
+    string ipfsCid,
+    bytes32 contentHash,
+    uint8 mode,
+    string clientMsgId,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+) external returns (bool);
+```
+
+**View Functions:**
+```solidity
+function computeConversationId(address user1, address user2)
+    external pure returns (uint256 conversationId);
+
+function transactionFeePercent() external view returns (uint256);
+
+function accumulatedFees(address token) external view returns (uint256);
+```
+
+**Events:**
+- `PaymentSent` - Payment transaction completed
+- `TransactionFeeSet` - Transaction fee updated
+- `FeesWithdrawn` - Owner withdrew accumulated fees
+
+### 3. DehiveProxy Contract
+
+**Purpose:** Diamond pattern proxy for modular, upgradeable system
+
+**Key Features:**
+- Function selector routing to facets
+- Facet management (add, upgrade, remove)
+- Owner-based access control
+- Storage isolation per facet
+
+**Core Functions:**
+```solidity
+// Manage facets
+function facetCut(
+    FacetCutStruct[] calldata _facetCuts,
+    address _init,
+    bytes calldata _calldata
+) external;
+
+// Query facet information
+function facetAddress(bytes4 _functionSelector)
+    external view returns (address);
+
+function facetAddresses() external view returns (address[] memory);
+
+function facetFunctionSelectors(address _facet)
+    external view returns (bytes4[] memory);
+```
+
+### 4. Airdrop System
+
+#### AirdropFactory Contract
+
+**Purpose:** Factory for deploying gas-efficient airdrop campaigns
+
+**Key Features:**
+- EIP-1167 minimal proxy deployment
 - Batch deployment and funding
-- Event emission for tracking
-- Deterministic deployment support
+- Deterministic address support
 
-**IMerkleAirdrop.sol** - Interface definition
-- Standardized airdrop interface
-- Function signatures for integration
+**Core Functions:**
+```solidity
+function createAirdropAndFund(
+    address token,
+    bytes32 merkleRoot,
+    string calldata metadataURI,
+    uint256 totalAmount
+) external returns (address);
 
-**MockERC20.sol** - Testing token
-- Minting capabilities for testing
-- Configurable decimals
-- Standard ERC20 implementation
+function createDeterministicAirdropAndFund(
+    bytes32 salt,
+    address token,
+    bytes32 merkleRoot,
+    string calldata metadataURI,
+    uint256 totalAmount
+) external returns (address);
+```
+
+#### MerkleAirdrop Contract
+
+**Purpose:** Individual airdrop campaign with Merkle proof verification
+
+**Key Features:**
+- Merkle proof verification
+- Bitmap-based claim tracking
+- 7-day withdrawal lock
+- Time-locked withdrawals
+
+**Core Functions:**
+```solidity
+function initialize(
+    address token_,
+    address owner_,
+    bytes32 merkleRoot_,
+    string memory metadataURI_,
+    uint256 totalAmount_
+) external;
+
+function claim(
+    uint256 index,
+    address account,
+    uint256 amount,
+    bytes32[] calldata merkleProof
+) external;
+
+function withdrawRemaining() external;
+```
+
+#### ServerAirdropRegistry Contract
+
+**Purpose:** Registry managing factory clones per server
+
+**Key Features:**
+- One factory clone per server (MongoDB server ID)
+- EIP-1167 clone pattern
+- Factory enumeration
+
+**Core Functions:**
+```solidity
+function createFactoryForServer(
+    string calldata serverId,
+    address owner
+) external returns (address factory);
+```
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-smart-contract/
+dehive-sc/
 ├── contracts/
-│   ├── AirdropFactory.sol           # Factory contract
-│   ├── MerkleAirdrop.sol            # Airdrop implementation
+│   ├── Message.sol                    # Messaging contract
+│   ├── PaymentHub.sol                 # Payment contract
+│   ├── DehiveProxy.sol                # Diamond proxy
+│   ├── AirdropFactory.sol             # Airdrop factory
+│   ├── MerkleAirdrop.sol              # Airdrop implementation
+│   ├── ServerAirdropRegistry.sol      # Server registry
 │   ├── interfaces/
-│   │   └── IMerkleAirdrop.sol       # Interface definition
+│   │   ├── IMessage.sol
+│   │   ├── IPaymentHub.sol
+│   │   ├── DehiveProxy.sol
+│   │   ├── IAirdropFactory.sol
+│   │   ├── IMerkleAirdrop.sol
+│   │   └── IServerAirdropRegistry.sol
+│   ├── libraries/
+│   │   ├── MessageStorage.sol         # Storage library for Message
+│   │   └── PaymentHubStorage.sol      # Storage library for PaymentHub
 │   └── mocks/
-│       └── MockERC20.sol            # Testing token
+│       └── MockERC20.sol               # Testing token
 ├── scripts/
-│   ├── deploy-sepolia.ts            # Sepolia deployment
-│   ├── create-airdrop-sepolia.ts    # Create test airdrop
-│   ├── claim-airdrop.ts             # Claim tokens
-│   ├── deployAndTest.ts             # Deploy and test flow
-│   ├── generateTestData.ts          # Generate test data
-│   └── view-transaction-logs.ts     # Debug transaction logs
+│   ├── deploy-sepolia.ts              # Sepolia deployment
+│   ├── create-airdrop-sepolia.ts      # Create test airdrop
+│   ├── claim-airdrop.ts               # Claim tokens
+│   ├── deployAndTest.ts               # Deploy and test flow
+│   ├── generateTestData.ts            # Generate test data
+│   └── view-transaction-logs.ts       # Debug transaction logs
 ├── test/
-│   └── AirdropFlow.test.ts          # Comprehensive test suite
-├── deployments/
-│   ├── sepolia_deployment.json      # Deployment information
-│   └── sepolia_airdrop_*.json       # Individual airdrop deployments
-├── test-data/
-│   ├── airdrop.csv                  # Original CSV upload format
-│   ├── claims.json                  # IPFS metadata with proofs
-│   ├── individual-claims.json       # Individual user claim data
-│   └── merkle-data.json             # Merkle tree generation data
-├── artifacts/                       # Compiled contracts
-├── cache/                          # Hardhat cache
-├── typechain-types/                # TypeScript types
-└── hardhat.config.ts               # Hardhat configuration
+│   ├── Message.test.ts                # Message contract tests
+│   ├── MessageEdgeCases.test.ts       # Message edge cases
+│   ├── MessageFacet.test.ts           # Message as facet tests
+│   ├── MessageLoad.test.ts            # Message load tests
+│   ├── PaymentHub.test.ts             # PaymentHub tests
+│   ├── PaymentHubFacet.test.ts        # PaymentHub as facet tests
+│   ├── PaymentHubIntegration.test.ts  # PaymentHub integration tests
+│   ├── airdrop/
+│   │   ├── AirdropFactory.test.ts
+│   │   ├── MerkleAirdrop.test.ts
+│   │   ├── AirdropRegistry.test.ts
+│   │   ├── AirdropEdgeCases.test.ts
+│   │   ├── AirdropIntegration.test.ts
+│   │   └── AirdropLoad.test.ts
+│   └── helpers/
+│       ├── conversationHelpers.ts
+│       ├── messageFetcher.ts
+│       ├── mockEncryption.ts
+│       └── testDataGenerator.ts
+├── deployments/                       # Deployment artifacts
+├── test-data/                         # Test data files
+├── artifacts/                         # Compiled contracts
+├── cache/                            # Hardhat cache
+├── typechain-types/                  # TypeScript types
+└── hardhat.config.ts                 # Hardhat configuration
 ```
 
 ---
 
-## 📊 Data Flow & File Formats
-
-### CSV Upload → Merkle Tree → IPFS → Smart Contract
-
-The system processes airdrop data through several stages:
-
-#### 1. Original CSV Format (`airdrop.csv`)
-```csv
-address,amount,index
-0x1234567890123456789012345678901234567890,100.0,0
-0x2345678901234567890123456789012345678901,200.0,1
-0x3456789012345678901234567890123456789012,300.0,2
-```
-
-#### 2. Generated Claims Data (`claims.json`)
-```json
-{
-  "metadata": {
-    "name": "Test Airdrop Campaign",
-    "merkleRoot": "0x6d43c20abc208559dd970943ba3fffff9c66d3c9ec1804e93958db82a377c2d8",
-    "totalAmount": "2125000000000000000000",
-    "claimDeadline": 1761812918,
-    "unlockTimestamp": 1761812918
-  },
-  "claims": [
-    {
-      "index": 0,
-      "account": "0x1234567890123456789012345678901234567890",
-      "amount": "100000000000000000000",
-      "proof": ["0x24920223f30fcc619dfc6409240274b48e55ef890a54cae81f4609141c445137"]
-    }
-  ]
-}
-```
-
-#### 3. Individual Claim Data (`individual-claims.json`)
-```json
-[
-  {
-    "index": 0,
-    "account": "0x1234567890123456789012345678901234567890",
-    "amount": "100000000000000000000",
-    "proof": ["0x24920223f30fcc619dfc6409240274b48e55ef890a54cae81f4609141c445137"]
-  }
-]
-```
-
-#### 4. Merkle Tree Data (`merkle-data.json`)
-```json
-{
-  "merkleRoot": "0x6d43c20abc208559dd970943ba3fffff9c66d3c9ec1804e93958db82a377c2d8",
-  "totalAmount": "2125000000000000000000",
-  "totalRecipients": 10,
-  "leaves": ["0x...", "0x..."]
-}
-```
-
-### Data Processing Pipeline
-
-1. **CSV Upload** → Parse addresses and amounts
-2. **Merkle Tree Generation** → Create tree with keccak256(abi.encodePacked(index, account, amount))
-3. **IPFS Upload** → Upload claims.json to get metadataURI
-4. **Smart Contract Deployment** → Use merkleRoot and metadataURI
-5. **User Claims** → Frontend fetches individual proof from IPFS
-
----
-
-## 🚀 Prerequisites
+## Prerequisites
 
 - **Node.js 18+** - Required for Hardhat
 - **npm or yarn** - Package manager
@@ -304,12 +413,12 @@ address,amount,index
 
 ---
 
-## 📦 Installation
+## Installation
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Pasonnn/ac-capstone-project.git
-   cd ac-capstone-project/smart-contract
+   cd ac-capstone-project/dehive-sc
    ```
 
 2. **Install dependencies**
@@ -331,20 +440,20 @@ address,amount,index
    SEPOLIA_RPC_URL=https://eth-sepolia.public.blastapi.io
    ETHERSCAN_API_KEY=your_etherscan_api_key
 
-   # IPFS Configuration
+   # IPFS Configuration (optional)
    IPFS_POST_URL=
    IPFS_GET_URL=
    ```
 
 ---
 
-## 🏃‍♂️ Available Scripts
+## Available Scripts
 
 ### Compilation & Testing
 ```bash
 npm run compile         # Compile all contracts
 npm run test           # Run all tests
-npm run test:flow      # Run comprehensive flow tests
+npm run test:flow      # Run comprehensive airdrop flow tests
 ```
 
 ### Deployment
@@ -357,124 +466,121 @@ npm run claim:airdrop  # Claim tokens from airdrop
 ### Development
 ```bash
 npm run clean          # Clean artifacts and cache
-npm run generate:data # Generate test data
+npm run generate:data  # Generate test data
+npm run deploy:demo    # Deploy to local network
 ```
 
 ---
 
-## 🎯 Contract Details
+## Contract Details
 
-### MerkleAirdrop Contract
+### Message Contract
 
-**Core Functions:**
+**Initialization:**
 ```solidity
-// Initialize the airdrop with parameters
-function initialize(
-    address token_,
-    address owner_,
-    bytes32 merkleRoot_,
-    string memory metadataURI_,
-    uint256 totalAmount_
-) external;
+// Standalone mode
+constructor(address owner)
 
-// Claim tokens with Merkle proof
-function claim(
-    uint256 index,
-    address account,
-    uint256 amount,
-    bytes32[] calldata merkleProof
-) external;
-
-// Withdraw remaining tokens (after 7 days)
-function withdrawRemaining() external;
+// Facet mode
+function init(address owner) external
 ```
 
-**View Functions:**
+**Configuration:**
+- Default pay-as-you-go fee: `0.0000002 ether`
+- Default relayer fee: `0.0000001 ether`
+- Owner can update fees and relayer address
+
+**Conversation ID Calculation:**
 ```solidity
-function isClaimed(uint256 index) external view returns (bool);
-function getBalance() external view returns (uint256);
-function getDaysUntilExpiry() external view returns (uint256);
-function getDaysUntilWithdrawal() external view returns (uint256);
-```
-
-### AirdropFactory Contract
-
-**Core Functions:**
-```solidity
-// Deploy and fund airdrop in single transaction
-function createAirdropAndFund(
-    address token,
-    bytes32 merkleRoot,
-    string calldata metadataURI,
-    uint256 totalAmount
-) external returns (address);
-
-// Deploy with deterministic address
-function createDeterministicAirdropAndFund(
-    bytes32 salt,
-    address token,
-    bytes32 merkleRoot,
-    string calldata metadataURI,
-    uint256 totalAmount
-) external returns (address);
-```
-
-**Utility Functions:**
-```solidity
-function getImplementation() external view returns (address);
-function predictCloneAddress(bytes32 salt) external view returns (address);
-```
-
----
-
-## 🌐 Deployment Information
-
-### Sepolia Testnet Deployment
-
-**Network:** Ethereum Sepolia Testnet
-**Chain ID:** 11155111
-**Factory Address:** `0x83c3860EcD9981f582434Ed67036db90D5375032`
-**Deployment Block:** 9473567
-**RPC URL:** https://eth-sepolia.public.blastapi.io
-
-### Contract Addresses
-
-```json
-{
-  "network": "sepolia",
-  "factory": "0x83c3860EcD9981f582434Ed67036db90D5375032",
-  "implementation": "0x...",
-  "deploymentBlock": 9473567,
-  "timestamp": "2025-01-XX"
+// Deterministic conversation ID
+function computeConversationId(address user1, address user2)
+    public pure returns (uint256) {
+    (address smaller, address larger) = user1 < user2
+        ? (user1, user2)
+        : (user2, user1);
+    return uint256(keccak256(abi.encodePacked(smaller, larger)));
 }
 ```
 
-### Etherscan Links
+### PaymentHub Contract
 
-- **Factory Contract:** [View on Etherscan](https://sepolia.etherscan.io/address/0x83c3860EcD9981f582434Ed67036db90D5375032)
-- **Implementation:** Check `deployments/sepolia_deployment.json`
+**Initialization:**
+```solidity
+// Standalone mode
+constructor(address _owner)
+
+// Facet mode
+function init(address _owner) external
+```
+
+**Fee Structure:**
+- Transaction fee: 0-10% (configurable in basis points)
+- Maximum fee: 1000 basis points (10%)
+- Fees accumulated per token
+- Owner can withdraw accumulated fees
+
+**Payment Modes:**
+- `0`: ERC-20 token payment
+- `1`: Native token payment
+
+### DehiveProxy Contract
+
+**Facet Management:**
+```solidity
+struct FacetCutStruct {
+    address facetAddress;
+    bytes4[] functionSelectors;
+    FacetCutAction action; // Add, Replace, Remove
+}
+
+function facetCut(
+    FacetCutStruct[] calldata _facetCuts,
+    address _init,
+    bytes calldata _calldata
+) external
+```
+
+**Access Control:**
+- Only owner can manage facets
+- Ownership can be transferred
+- Owner can withdraw funds from proxy
+
+### Airdrop System
+
+See the existing airdrop documentation in this README for detailed information about the airdrop contracts.
 
 ---
 
-## 🧪 Testing
+## Testing
 
-### Comprehensive Test Suite
+### Test Coverage
 
-The test suite covers all critical functionality:
+The test suite covers all contracts with comprehensive testing:
 
-**Core Functionality:**
-- ✅ Airdrop creation and funding
+**Message Contract:**
+- ✅ Conversation creation
+- ✅ Message sending (pay-as-you-go)
+- ✅ Relayer-based messaging
+- ✅ Fee management
+- ✅ Edge cases and error handling
+- ✅ Load testing
+- ✅ Facet mode testing
+
+**PaymentHub Contract:**
+- ✅ Native token payments
+- ✅ ERC-20 token payments
+- ✅ Permit-based payments
+- ✅ Fee calculation
+- ✅ Integration tests
+- ✅ Facet mode testing
+
+**Airdrop System:**
+- ✅ Factory deployment
 - ✅ Merkle proof verification
-- ✅ Token claiming process
+- ✅ Token claiming
 - ✅ Double-claim prevention
-- ✅ Withdrawal locking mechanism
-
-**Edge Cases:**
-- ✅ Invalid Merkle proofs
-- ✅ Expired airdrops
-- ✅ Insufficient token balance
-- ✅ Unauthorized withdrawals
-- ✅ Gas optimization verification
+- ✅ Withdrawal locking
+- ✅ Edge cases and load testing
 
 ### Running Tests
 
@@ -483,41 +589,49 @@ The test suite covers all critical functionality:
 npm run test
 
 # Run specific test file
-npm run test:flow
+npx hardhat test test/Message.test.ts
+npx hardhat test test/PaymentHub.test.ts
+npx hardhat test test/airdrop/MerkleAirdrop.test.ts
 
 # Run with gas reporting
 REPORT_GAS=true npm run test
+
+# Run with coverage
+npx hardhat coverage
 ```
-
-### Test Coverage
-
-- **Unit Tests** - Individual function testing
-- **Integration Tests** - End-to-end airdrop flow
-- **Edge Case Testing** - Error conditions and boundaries
-- **Gas Optimization** - Cost analysis and optimization
 
 ---
 
-## 🔒 Security Considerations
+## Security Considerations
 
 ### Built-in Security Features
 
-**1. Merkle Proof Verification**
-- Prevents unauthorized claims
+**1. Access Control**
+- Owner-only functions properly protected
+- Relayer-only functions for credit-based messaging
+- Reentrancy guards on payment functions
+
+**2. Input Validation**
+- All parameters validated
+- Zero address checks
+- Amount validation
+- Deadline validation for permits
+
+**3. Encryption & Privacy**
+- Per-conversation encryption keys
+- Per-user key encryption
+- Deterministic conversation IDs
+
+**4. Merkle Proof Verification**
+- Cryptographic verification prevents unauthorized claims
 - Efficient on-chain verification
 - No central authority required
 
-**2. Time-Locked Withdrawals**
-- 7-day lock prevents rug pulls
-- Creator cannot withdraw immediately
+**5. Time-Locked Withdrawals**
+- 7-day lock prevents immediate rug pulls
 - Transparent withdrawal timeline
 
-**3. Double-Claim Prevention**
-- Bitmap tracking prevents duplicate claims
-- Gas-efficient claim status storage
-- Immutable claim records
-
-**4. OpenZeppelin Integration**
+**6. OpenZeppelin Integration**
 - Battle-tested security libraries
 - Standardized implementations
 - Regular security updates
@@ -526,38 +640,71 @@ REPORT_GAS=true npm run test
 
 - **Access Control** - Owner-only functions properly protected
 - **Input Validation** - All parameters validated
-- **Reentrancy Protection** - Safe external calls
+- **Reentrancy Protection** - Safe external calls with ReentrancyGuard
 - **Gas Optimization** - Efficient storage patterns
+- **Safe Math** - Solidity 0.8+ built-in overflow protection
+- **SafeERC20** - Safe token transfers
 
 ---
 
-## ⚡ Gas Optimization
+## Gas Optimization
+
+### Diamond Pattern Benefits
+
+- **Modular Deployment**: Only deploy needed facets
+- **Shared Storage**: Single proxy storage for all facets
+- **Upgradeability**: Upgrade individual facets without full redeployment
 
 ### EIP-1167 Minimal Proxy Pattern
 
 **Benefits:**
-- **Low Deployment Cost** - ~45,000 gas vs ~2,000,000 gas
-- **Standardized Interface** - Consistent airdrop behavior
-- **Upgradeable Logic** - Implementation can be updated
-- **Gas Efficient** - Minimal proxy overhead
+- **Low Deployment Cost**: ~45,000 gas vs ~2,000,000 gas (~95% savings)
+- **Standardized Interface**: Consistent airdrop behavior
+- **Upgradeable Logic**: Implementation can be updated
+- **Gas Efficient**: Minimal proxy overhead
 
 ### Storage Optimization
 
 **Bitmap for Claims:**
-- **Efficient Storage** - 1 bit per claim vs 1 slot per claim
-- **Gas Savings** - ~20,000 gas per claim
-- **Scalable** - Supports unlimited claims
+- **Efficient Storage**: 1 bit per claim vs 1 slot per claim
+- **Gas Savings**: ~20,000 gas per claim
+- **Scalable**: Supports unlimited claims
 
-### Merkle Tree Efficiency
-
-**Optimized Verification:**
-- **Single Hash Check** - O(log n) complexity
-- **Batch Verification** - Multiple proofs in one transaction
-- **Gas Efficient** - Minimal computation required
+**Library Storage Pattern:**
+- Message and PaymentHub use library storage
+- Prevents storage collisions in facet mode
+- Efficient storage access
 
 ---
 
-## 🔧 Development Workflow
+## Deployment Information
+
+### Sepolia Testnet Deployment
+
+**Network:** Ethereum Sepolia Testnet
+**Chain ID:** 11155111
+**RPC URL:** https://eth-sepolia.public.blastapi.io
+
+**Contract Addresses:**
+- **DehiveProxy**: `0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8`
+- **Message Facet**: Check deployment artifacts
+- **PaymentHub Facet**: Check deployment artifacts
+- **AirdropFactory**: `0x83c3860EcD9981f582434Ed67036db90D5375032`
+- **ServerAirdropRegistry**: `0x387D6D818F0cafF8a98E9EFecB75694246cF8D92`
+
+**Deployment Blocks:**
+- DehiveProxy: 9535551
+- ServerAirdropRegistry: 9552434
+
+### Etherscan Links
+
+- **DehiveProxy**: [View on Etherscan](https://sepolia.etherscan.io/address/0x83Eb2fC1925522434C17C6a32eCE67f4620b73C8)
+- **AirdropFactory**: [View on Etherscan](https://sepolia.etherscan.io/address/0x83c3860EcD9981f582434Ed67036db90D5375032)
+- **ServerAirdropRegistry**: [View on Etherscan](https://sepolia.etherscan.io/address/0x387D6D818F0cafF8a98E9EFecB75694246cF8D92)
+
+---
+
+## Development Workflow
 
 ### Local Development
 
@@ -602,7 +749,7 @@ REPORT_GAS=true npm run test
 
 2. **Deploy to Mainnet**
    ```bash
-   npm run deploy:mainnet
+   npx hardhat run scripts/deploy-mainnet.ts --network mainnet
    ```
 
 3. **Verify Contracts**
@@ -612,12 +759,15 @@ REPORT_GAS=true npm run test
 
 ---
 
-## 📊 Gas Analysis
+## Gas Analysis
 
 ### Deployment Costs
 
 | Contract | Gas Cost | USD (20 gwei) |
 |----------|----------|---------------|
+| **DehiveProxy** | ~1,500,000 | ~$30 |
+| **Message Facet** | ~2,000,000 | ~$40 |
+| **PaymentHub Facet** | ~1,800,000 | ~$36 |
 | **MerkleAirdrop** | ~2,000,000 | ~$40 |
 | **AirdropFactory** | ~1,500,000 | ~$30 |
 | **Airdrop Clone** | ~45,000 | ~$0.90 |
@@ -626,13 +776,17 @@ REPORT_GAS=true npm run test
 
 | Operation | Gas Cost | USD (20 gwei) |
 |-----------|----------|---------------|
+| **Create Conversation** | ~120,000 | ~$2.40 |
+| **Send Message (pay-as-you-go)** | ~80,000 | ~$1.60 |
+| **Send Message (relayer)** | ~60,000 | ~$1.20 |
+| **Send Native Payment** | ~70,000 | ~$1.40 |
+| **Send ERC-20 Payment** | ~90,000 | ~$1.80 |
 | **Create Airdrop** | ~200,000 | ~$4 |
 | **Claim Tokens** | ~80,000 | ~$1.60 |
-| **Withdraw Remaining** | ~60,000 | ~$1.20 |
 
 ---
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -651,6 +805,11 @@ REPORT_GAS=true npm run test
 - Increase gas limit if needed
 - Verify contract state
 
+**4. Facet Installation Issues**
+- Verify function selectors are unique
+- Check facet address is correct
+- Ensure init function is correct
+
 ### Getting Help
 
 - **GitHub Issues:** [Create an issue](https://github.com/Pasonnn/ac-capstone-project/issues)
@@ -659,15 +818,16 @@ REPORT_GAS=true npm run test
 
 ---
 
-## 📄 License
+## License
 
 MIT © 2025 Pason.Dev
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **OpenZeppelin** - Battle-tested smart contract libraries
 - **Hardhat** - Ethereum development environment
+- **EIP-2535** - Diamond pattern standard
 - **EIP-1167** - Minimal proxy standard
 - **Ethereum Foundation** - Core protocol development
